@@ -1,0 +1,3386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FlipMart — E-Commerce QA Sandbox</title>
+  <style>
+    /* ===================================================================== */
+    /* DESIGN TOKENS & BASE RESET (ZERO EXTERNAL DEPENDENCIES)               */
+    /* ===================================================================== */
+    :root {
+      --blue: #2874f0;
+      --blue-dark: #1c5ed6;
+      --blue-soft: #eef4ff;
+      --orange: #fb641b;
+      --orange-dark: #e0520d;
+      --amber: #ff9f00;
+      --amber-dark: #e68f00;
+      --plus-yellow: #ffe500;
+      --green: #388e3c;
+      --green-soft: #e8f5e9;
+      --red: #d32f2f;
+      --red-soft: #ffebee;
+      --bg: #f1f3f6;
+      --surface: #ffffff;
+      --border: #e0e3e7;
+      --text: #212121;
+      --muted: #6c727f;
+      --radius: 10px;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+      --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.2);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+      min-height: 100vh;
+      padding-bottom: 64px;
+      overflow-x: hidden;
+    }
+
+    button, input, select, textarea { font-family: inherit; }
+    button { cursor: pointer; }
+    .hidden { display: none !important; }
+    .container { max-width: 1320px; margin: 0 auto; padding: 0 16px; }
+
+    /* ===================================================================== */
+    /* HEADER & CATEGORY STRIP                                               */
+    /* ===================================================================== */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: var(--blue);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
+    }
+    .header-inner {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 10px 16px;
+      max-width: 1320px;
+      margin: 0 auto;
+      flex-wrap: wrap;
+    }
+    .brand-btn {
+      background: transparent;
+      border: none;
+      color: #fff;
+      text-align: left;
+      padding: 2px 4px;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .brand-name {
+      font-size: 21px;
+      font-weight: 800;
+      font-style: italic;
+      letter-spacing: -0.3px;
+      line-height: 1.1;
+    }
+    .brand-tag {
+      font-size: 11px;
+      font-style: italic;
+      color: #e2ecff;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .brand-tag strong { color: var(--plus-yellow); font-weight: 700; }
+
+    /* Live Search with Autocomplete */
+    .search-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 220px;
+      max-width: 520px;
+    }
+    .search-box {
+      display: flex;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+    }
+    .search-box input {
+      flex: 1;
+      border: none;
+      outline: none;
+      padding: 9px 14px;
+      font-size: 13.5px;
+      color: var(--text);
+    }
+    .search-box button {
+      background: transparent;
+      border: none;
+      color: var(--blue);
+      padding: 0 14px;
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .search-suggestions {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: #fff;
+      color: var(--text);
+      border-radius: 10px;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border);
+      z-index: 60;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+    .suggestion-item {
+      width: 100%;
+      background: #fff;
+      border: none;
+      border-bottom: 1px solid #f1f3f6;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      text-align: left;
+      font-size: 13px;
+    }
+    .suggestion-item:hover { background: var(--blue-soft); }
+    .suggestion-meta { font-size: 11px; color: var(--muted); }
+
+    /* Header Nav Actions */
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: auto;
+      flex-wrap: wrap;
+    }
+    .nav-btn {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: #fff;
+      border-radius: 8px;
+      padding: 7px 11px;
+      font-size: 12.5px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s;
+    }
+    .nav-btn:hover, .nav-btn.active {
+      background: rgba(255, 255, 255, 0.26);
+    }
+    .login-btn {
+      background: #fff;
+      color: var(--blue);
+      border: none;
+      border-radius: 8px;
+      padding: 7px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .login-btn:hover { background: #f3f7ff; }
+    .badge-pill {
+      background: var(--orange);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 1px 6px;
+      border-radius: 999px;
+      min-width: 18px;
+      text-align: center;
+    }
+    .plus-pill {
+      background: var(--plus-yellow);
+      color: #111;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 1px 6px;
+      border-radius: 999px;
+    }
+
+    /* Category Icon Strip */
+    .cat-strip {
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+    }
+    .cat-strip-inner {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      overflow-x: auto;
+    }
+    .cat-chip {
+      background: #f8f9fb;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+    .cat-chip:hover { border-color: var(--blue); color: var(--blue); }
+    .cat-chip.active {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+
+    /* ===================================================================== */
+    /* BUTTONS & COMMON UI                                                   */
+    /* ===================================================================== */
+    .btn {
+      border: none;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 13.5px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: filter 0.15s, transform 0.1s;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: var(--blue); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: var(--blue-dark); }
+    .btn-cart { background: var(--amber); color: #fff; }
+    .btn-cart:hover:not(:disabled) { background: var(--amber-dark); }
+    .btn-buy { background: var(--orange); color: #fff; }
+    .btn-buy:hover:not(:disabled) { background: var(--orange-dark); }
+    .btn-outline {
+      background: #fff;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-outline:hover:not(:disabled) { background: #f8f9fa; border-color: #c5cad2; }
+    .btn-danger { background: var(--red-soft); color: var(--red); border: 1px solid #ffcdd2; }
+    .btn-danger:hover:not(:disabled) { background: #ffd8dc; }
+    .btn-sm { padding: 6px 11px; font-size: 12px; }
+
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+    }
+    .alert-err {
+      background: var(--red-soft);
+      border: 1px solid #ef9a9a;
+      color: var(--red);
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 600;
+    }
+    .alert-ok {
+      background: var(--green-soft);
+      border: 1px solid #a5d6a7;
+      color: #1b5e20;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 600;
+    }
+
+    /* ===================================================================== */
+    /* HERO CAROUSEL & FLASH SALE + SUPERCOIN STRIP                          */
+    /* ===================================================================== */
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1fr 310px;
+      gap: 14px;
+      margin-top: 14px;
+    }
+    .carousel {
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+      min-height: 210px;
+      box-shadow: var(--shadow-sm);
+    }
+    .slide {
+      display: none;
+      padding: 28px 54px;
+      min-height: 210px;
+      color: #fff;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .slide.active { display: flex; }
+    .slide-1 { background: linear-gradient(120deg, #1d4ed8, #2874f0 55%, #0ea5e9); }
+    .slide-2 { background: linear-gradient(120deg, #0f172a, #1e3a8a 60%, #fb641b); }
+    .slide-3 { background: linear-gradient(120deg, #7c2d12, #ea580c 55%, #f59e0b); }
+    .slide h2 { margin: 6px 0 8px; font-size: 26px; font-weight: 800; line-height: 1.15; }
+    .slide p { margin: 0 0 14px; font-size: 13.5px; opacity: 0.92; max-width: 460px; }
+    .slide-tag {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
+    .carousel-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 34px;
+      height: 52px;
+      background: rgba(255, 255, 255, 0.9);
+      color: #111;
+      border: none;
+      border-radius: 6px;
+      font-size: 18px;
+      font-weight: 800;
+    }
+    .carousel-arrow.prev { left: 10px; }
+    .carousel-arrow.next { right: 10px; }
+    .carousel-dots {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 6px;
+    }
+    .carousel-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      border: none;
+      background: rgba(255, 255, 255, 0.45);
+      padding: 0;
+    }
+    .carousel-dot.active { width: 22px; background: #fff; }
+
+    .flash-side {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .flash-box {
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: var(--shadow-sm);
+    }
+    .timer-pill {
+      background: #111827;
+      color: var(--plus-yellow);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 14px;
+      font-weight: 800;
+      padding: 5px 10px;
+      border-radius: 8px;
+      letter-spacing: 1px;
+    }
+
+    /* ===================================================================== */
+    /* PLP LAYOUT: FILTERS + PRODUCT GRID                                    */
+    /* ===================================================================== */
+    .plp-layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 16px;
+      margin-top: 16px;
+      align-items: start;
+    }
+    .filter-panel {
+      padding: 16px;
+      position: sticky;
+      top: 72px;
+    }
+    .filter-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+    .filter-group {
+      padding: 10px 0;
+      border-bottom: 1px solid #f0f2f5;
+    }
+    .filter-group:last-child { border-bottom: none; }
+    .filter-title {
+      font-size: 11.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      padding: 3px 0;
+      cursor: pointer;
+    }
+    .check-row input { accent-color: var(--blue); cursor: pointer; }
+    #brandFilters {
+      max-height: 210px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .sort-bar {
+      padding: 10px 16px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .sort-tabs { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .sort-tab {
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      padding: 6px 10px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .sort-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    .product-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      padding: 14px;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .product-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    .card-top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .compare-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11.5px;
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .wishlist-btn {
+      background: #f8f9fb;
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      color: #9e9e9e;
+    }
+    .wishlist-btn.active { color: #e53935; background: #ffebee; border-color: #ffcdd2; }
+
+    .product-thumb {
+      height: 150px;
+      background: #f8fafc;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 10px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    .stock-tag {
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      font-size: 10.5px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+    .stock-low { background: #fff3e0; color: #e65100; border: 1px solid #ffcc80; }
+    .stock-out { background: var(--red-soft); color: var(--red); border: 1px solid #ef9a9a; }
+
+    .product-brand { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
+    .product-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      margin: 2px 0 6px;
+      cursor: pointer;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      min-height: 38px;
+    }
+    .product-title:hover { color: var(--blue); }
+
+    .rating-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    .rating-pill {
+      background: var(--green);
+      color: #fff;
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 5px;
+    }
+    .assured-badge {
+      background: #e3f2fd;
+      color: #1565c0;
+      font-size: 10.5px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+    .price-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .price-now { font-size: 18px; font-weight: 800; color: var(--text); }
+    .price-mrp { font-size: 12.5px; color: var(--muted); text-decoration: line-through; }
+    .price-off { font-size: 12.5px; font-weight: 700; color: var(--green); }
+
+    .pagination {
+      margin-top: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .page-btn {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 13px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .page-btn.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+    .page-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* Recently Viewed Strip */
+    .recent-strip {
+      margin-top: 22px;
+      padding: 16px;
+    }
+    .recent-list {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding-top: 10px;
+    }
+    .recent-item {
+      min-width: 190px;
+      max-width: 190px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      background: #fafbfc;
+      cursor: pointer;
+    }
+    .recent-item:hover { border-color: var(--blue); }
+
+    /* ===================================================================== */
+    /* CART, CHECKOUT, ORDERS & WISHLIST LAYOUTS                             */
+    /* ===================================================================== */
+    .two-col-main {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 16px;
+      margin-top: 16px;
+      align-items: start;
+    }
+    .cart-item {
+      display: flex;
+      gap: 14px;
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .cart-item:last-child { border-bottom: none; }
+    .qty-box {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .qty-box button {
+      background: #f8f9fa;
+      border: none;
+      width: 30px;
+      height: 30px;
+      font-weight: 800;
+      font-size: 15px;
+    }
+    .qty-box span {
+      min-width: 34px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .price-line {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13.5px;
+      padding: 6px 0;
+    }
+    .price-total {
+      display: flex;
+      justify-content: space-between;
+      font-size: 17px;
+      font-weight: 800;
+      padding: 12px 0 8px;
+      border-top: 1px dashed var(--border);
+      margin-top: 6px;
+    }
+
+    /* Checkout Step Cards */
+    .checkout-step { margin-bottom: 14px; overflow: hidden; }
+    .step-header {
+      background: #f8faff;
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .step-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: var(--blue);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      margin-right: 8px;
+    }
+    .step-body { padding: 16px; }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .field input, .field select, .field textarea {
+      width: 100%;
+      padding: 9px 11px;
+      border: 1px solid #cfd5dd;
+      border-radius: 8px;
+      font-size: 13px;
+      outline: none;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 2px rgba(40, 116, 240, 0.15);
+    }
+
+    /* Order Tracker */
+    .tracker {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin: 14px 0;
+    }
+    .track-step {
+      position: relative;
+      text-align: center;
+      font-size: 11.5px;
+      color: var(--muted);
+    }
+    .track-dot {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      margin: 0 auto 5px;
+      background: #e0e3e7;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .track-step.done .track-dot { background: var(--green); }
+    .track-step.done { color: var(--green); font-weight: 700; }
+
+    /* ===================================================================== */
+    /* MODALS & TOASTS                                                       */
+    /* ===================================================================== */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      background: rgba(15, 23, 42, 0.65);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-box {
+      background: #fff;
+      border-radius: 14px;
+      width: 100%;
+      max-width: 820px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+    }
+    .modal-sm { max-width: 460px; }
+    .modal-lg { max-width: 960px; }
+    .modal-head {
+      position: sticky;
+      top: 0;
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 5;
+    }
+    .modal-close {
+      background: #f1f3f6;
+      border: none;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      font-size: 15px;
+      font-weight: 800;
+    }
+    .modal-body { padding: 18px; }
+
+    .pdp-grid {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 20px;
+    }
+    .variant-btn {
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 12.5px;
+      font-weight: 600;
+    }
+    .variant-btn.active {
+      border-color: var(--blue);
+      background: var(--blue-soft);
+      color: var(--blue);
+    }
+
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .compare-table th, .compare-table td {
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+    .compare-table th { background: #f8f9fb; width: 150px; color: var(--muted); }
+
+    .toast-stack {
+      position: fixed;
+      bottom: 66px;
+      right: 18px;
+      z-index: 95;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-width: 340px;
+    }
+    .toast {
+      background: #1f2937;
+      color: #fff;
+      padding: 11px 14px;
+      border-radius: 10px;
+      font-size: 12.5px;
+      font-weight: 600;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .toast.success { background: var(--green); }
+    .toast.error { background: var(--red); }
+
+    /* ===================================================================== */
+    /* PERSISTENT BOTTOM QA CONTROL BAR                                      */
+    /* ===================================================================== */
+    .qa-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 70;
+      background: #0f172a;
+      color: #e2e8f0;
+      border-top: 1px solid #1e293b;
+      padding: 8px 16px;
+      font-size: 12px;
+    }
+    .qa-bar-inner {
+      max-width: 1320px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .qa-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .qa-pill {
+      background: rgba(40, 116, 240, 0.22);
+      color: #93c5fd;
+      border: 1px solid rgba(40, 116, 240, 0.4);
+      padding: 2px 9px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 11px;
+    }
+    .qa-select, .qa-btn {
+      background: #1e293b;
+      color: #f8fafc;
+      border: 1px solid #334155;
+      border-radius: 7px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .qa-btn:hover { background: #334155; }
+
+    /* ===================================================================== */
+    /* RESPONSIVE BREAKPOINTS                                                */
+    /* ===================================================================== */
+    @media (max-width: 1024px) {
+      .hero-grid { grid-template-columns: 1fr; }
+      .plp-layout { grid-template-columns: 1fr; }
+      .filter-panel { position: static; }
+      .product-grid { grid-template-columns: repeat(2, 1fr); }
+      .two-col-main { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .product-grid { grid-template-columns: 1fr; }
+      .pdp-grid { grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+      .slide { padding: 22px 44px; }
+      .slide h2 { font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===================================================================== -->
+  <!-- 1. FLIPMART HEADER & CATEGORY STRIP                                   -->
+  <!-- ===================================================================== -->
+  <header class="site-header" data-testid="site-header">
+    <div class="header-inner">
+      <button type="button" class="brand-btn" data-testid="brand-logo-btn" onclick="switchView('shop')">
+        <span class="brand-name">FlipMart</span>
+        <span class="brand-tag">Explore <strong>Plus ✦</strong></span>
+      </button>
+
+      <!-- Live Search + Autocomplete -->
+      <div class="search-wrap">
+        <div class="search-box">
+          <input
+            type="text"
+            id="searchInput"
+            data-testid="search-input"
+            placeholder="Search for mobiles, laptops, shoes, brands..."
+            autocomplete="off"
+          />
+          <button type="button" id="searchBtn" data-testid="search-submit-btn" aria-label="Search">🔍</button>
+        </div>
+        <div id="searchSuggestions" data-testid="search-suggestions" class="search-suggestions hidden"></div>
+      </div>
+
+      <!-- Account + Navigation Actions -->
+      <div class="header-actions">
+        <button type="button" id="authHeaderBtn" data-testid="auth-open-btn" class="login-btn" onclick="handleAuthHeaderClick()">
+          Login
+        </button>
+        <button type="button" id="logoutHeaderBtn" data-testid="logout-btn" class="nav-btn hidden" onclick="logoutUser()">
+          Logout
+        </button>
+        <button type="button" data-view="shop" data-testid="nav-shop" class="nav-btn active" onclick="switchView('shop')">
+          🏠 Shop
+        </button>
+        <button type="button" data-view="orders" data-testid="nav-orders" class="nav-btn" onclick="switchView('orders')">
+          📦 Orders
+        </button>
+        <button type="button" data-view="wishlist" data-testid="nav-wishlist" class="nav-btn" onclick="switchView('wishlist')">
+          ♥ Wishlist <span id="wishlistBadge" data-testid="wishlist-badge" class="badge-pill">0</span>
+        </button>
+        <button type="button" data-testid="nav-compare" class="nav-btn" onclick="openCompareModal()">
+          ⇄ Compare <span id="compareBadge" data-testid="compare-badge" class="badge-pill">0</span>
+        </button>
+        <button type="button" data-view="cart" data-testid="nav-cart" class="nav-btn" onclick="switchView('cart')">
+          🛒 Cart <span id="cartBadge" data-testid="cart-badge" class="badge-pill">0</span>
+        </button>
+        <button type="button" data-view="qalab" data-testid="nav-qalab" class="nav-btn" onclick="switchView('qalab')">
+          🧪 QA Lab
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Category Icon Strip -->
+  <div class="cat-strip" data-testid="category-strip">
+    <div class="cat-strip-inner" id="categoryStrip"></div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MAIN CONTENT VIEWS                                                    -->
+  <!-- ===================================================================== -->
+  <main class="container">
+
+    <!-- =================================================================== -->
+    <!-- VIEW 1: SHOP (HERO CAROUSEL, FLASH SALE, SUPERCOIN SHADOW DOM, PLP) -->
+    <!-- =================================================================== -->
+    <section id="view-shop" data-testid="view-shop">
+      <!-- Hero Carousel + Flash Timer + Open Shadow DOM SuperCoin Widget -->
+      <div class="hero-grid">
+        <div class="carousel" data-testid="hero-carousel">
+          <div class="slide slide-1 active" data-testid="carousel-slide-0">
+            <div>
+              <span class="slide-tag">Live Now · Limited Period</span>
+              <h2>Big Billion QA Sale</h2>
+              <p>Up to 45% off on flagship smartphones, ANC audio, and smart appliances. Apply coupon <strong>SAVE10</strong> or <strong>FLAT500</strong> at cart.</p>
+              <button type="button" class="btn btn-buy" data-testid="hero-cta-0" onclick="selectCategory('Mobiles')">Shop Mobiles →</button>
+            </div>
+            <div style="font-size:64px;user-select:none;">🛍️</div>
+          </div>
+
+          <div class="slide slide-2" data-testid="carousel-slide-1">
+            <div>
+              <span class="slide-tag">0% Interest · 3 to 12 Months</span>
+              <h2>No-Cost EMI on Flagship Mobiles</h2>
+              <p>Upgrade to iPhone 16 Pro or Galaxy S24 Ultra with instant iframe card verification and flexible monthly EMIs.</p>
+              <button type="button" class="btn btn-cart" data-testid="hero-cta-1" onclick="selectCategory('Electronics')">Explore Electronics →</button>
+            </div>
+            <div style="font-size:64px;user-select:none;">📱</div>
+          </div>
+
+          <div class="slide slide-3" data-testid="carousel-slide-2">
+            <div>
+              <span class="slide-tag">Extra 10% for Plus VIP</span>
+              <h2>Fashion Mega Deals</h2>
+              <p>Fresh arrivals from Levi's &amp; Nike with free delivery for FlipMart Plus members and orders above ₹999.</p>
+              <button type="button" class="btn btn-primary" data-testid="hero-cta-2" onclick="selectCategory('Fashion')">Shop Fashion →</button>
+            </div>
+            <div style="font-size:64px;user-select:none;">👟</div>
+          </div>
+
+          <button type="button" class="carousel-arrow prev" data-testid="carousel-prev" onclick="moveSlide(-1)" aria-label="Previous slide">‹</button>
+          <button type="button" class="carousel-arrow next" data-testid="carousel-next" onclick="moveSlide(1)" aria-label="Next slide">›</button>
+          <div class="carousel-dots">
+            <button type="button" class="carousel-dot active" data-testid="carousel-dot-0" onclick="goToSlide(0)" aria-label="Slide 1"></button>
+            <button type="button" class="carousel-dot" data-testid="carousel-dot-1" onclick="goToSlide(1)" aria-label="Slide 2"></button>
+            <button type="button" class="carousel-dot" data-testid="carousel-dot-2" onclick="goToSlide(2)" aria-label="Slide 3"></button>
+          </div>
+        </div>
+
+        <div class="flash-side">
+          <div class="flash-box" data-testid="flash-sale-box">
+            <div>
+              <div style="font-size:11px;font-weight:800;color:var(--orange);text-transform:uppercase;">⚡ Flash Deals Ending In</div>
+              <div style="font-size:12px;color:var(--muted);">Extra savings on Assured picks</div>
+            </div>
+            <div id="flashTimer" data-testid="flash-timer" class="timer-pill">04:59:59</div>
+          </div>
+
+          <!-- Open Shadow DOM Custom Element -->
+          <supercoin-widget id="homeSupercoinWidget" data-testid="supercoin-widget"></supercoin-widget>
+        </div>
+      </div>
+
+      <!-- PLP: Left Filters + Right Product Grid -->
+      <div class="plp-layout">
+        <aside class="card filter-panel" data-testid="filter-sidebar">
+          <div class="filter-head">
+            <strong style="font-size:15px;">Filters</strong>
+            <button type="button" class="btn btn-outline btn-sm" data-testid="clear-filters-btn" onclick="clearAllFilters()">Clear All</button>
+          </div>
+
+          <!-- Category Filter -->
+          <div class="filter-group">
+            <div class="filter-title">Category</div>
+            <select id="filterCategory" data-testid="filter-category-select" style="width:100%;padding:7px 9px;border:1px solid var(--border);border-radius:8px;font-size:13px;" onchange="selectCategory(this.value)">
+              <option value="All">All Categories (120)</option>
+              <option value="Mobiles">Mobiles (20)</option>
+              <option value="Electronics">Electronics (20)</option>
+              <option value="Fashion">Fashion (20)</option>
+              <option value="Home">Home (20)</option>
+              <option value="Appliances">Appliances (20)</option>
+              <option value="Grocery">Grocery (20)</option>
+            </select>
+          </div>
+
+          <!-- Max Price Slider -->
+          <div class="filter-group">
+            <div class="filter-title" style="display:flex;justify-content:space-between;">
+              <span>Max Price</span>
+              <span id="maxPriceLabel" data-testid="filter-max-price-label" style="color:var(--blue);">₹ 1,50,000</span>
+            </div>
+            <input
+              type="range"
+              id="filterMaxPrice"
+              data-testid="filter-max-price"
+              min="1000"
+              max="150000"
+              step="1000"
+              value="150000"
+              style="width:100%;accent-color:var(--blue);"
+              oninput="onPriceSliderChange(this.value)"
+            />
+          </div>
+
+          <!-- Brand Checkboxes -->
+          <div class="filter-group">
+            <div class="filter-title">Brand</div>
+            <div id="brandFilters" data-testid="brand-filters"></div>
+          </div>
+
+          <!-- Minimum Rating -->
+          <div class="filter-group">
+            <div class="filter-title">Customer Rating</div>
+            <label class="check-row">
+              <input type="radio" name="minRating" value="0" data-testid="filter-rating-all" checked onchange="onFilterChange()" /> All Ratings
+            </label>
+            <label class="check-row">
+              <input type="radio" name="minRating" value="4.5" data-testid="filter-rating-45" onchange="onFilterChange()" /> 4.5★ &amp; above
+            </label>
+            <label class="check-row">
+              <input type="radio" name="minRating" value="4" data-testid="filter-rating-4" onchange="onFilterChange()" /> 4★ &amp; above
+            </label>
+            <label class="check-row">
+              <input type="radio" name="minRating" value="3" data-testid="filter-rating-3" onchange="onFilterChange()" /> 3★ &amp; above
+            </label>
+          </div>
+
+          <!-- Availability -->
+          <div class="filter-group">
+            <div class="filter-title">Availability</div>
+            <label class="check-row">
+              <input type="checkbox" id="filterExcludeOOS" data-testid="filter-exclude-oos" onchange="onFilterChange()" />
+              Exclude Out of Stock
+            </label>
+          </div>
+        </aside>
+
+        <div>
+          <!-- Sort Bar -->
+          <div class="card sort-bar">
+            <div style="font-size:13px;color:var(--muted);">
+              Showing <strong id="resultCount" data-testid="result-count" style="color:var(--text);">0</strong> products
+            </div>
+            <div class="sort-tabs" data-testid="sort-bar">
+              <span style="font-size:12px;font-weight:700;color:var(--muted);margin-right:4px;">Sort By:</span>
+              <button type="button" class="sort-tab active" data-sort="relevance" data-testid="sort-relevance" onclick="setSort('relevance')">Relevance</button>
+              <button type="button" class="sort-tab" data-sort="price_asc" data-testid="sort-price-asc" onclick="setSort('price_asc')">Price — Low to High</button>
+              <button type="button" class="sort-tab" data-sort="price_desc" data-testid="sort-price-desc" onclick="setSort('price_desc')">Price — High to Low</button>
+              <button type="button" class="sort-tab" data-sort="rating" data-testid="sort-rating" onclick="setSort('rating')">Top Rated</button>
+            </div>
+          </div>
+
+          <!-- Product Grid -->
+          <div id="productGrid" data-testid="product-grid" class="product-grid"></div>
+
+          <!-- Pagination -->
+          <div id="paginationBar" data-testid="pagination-bar" class="pagination"></div>
+        </div>
+      </div>
+
+      <!-- Recently Viewed Strip -->
+      <div id="recentlyViewedWrap" data-testid="recently-viewed-section" class="card recent-strip hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <strong style="font-size:16px;">Recently Viewed</strong>
+          <button type="button" class="btn btn-outline btn-sm" onclick="clearRecentlyViewed()">Clear</button>
+        </div>
+        <div id="recentlyViewedList" data-testid="recently-viewed-list" class="recent-list"></div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- VIEW 2: WISHLIST                                                    -->
+    <!-- =================================================================== -->
+    <section id="view-wishlist" data-testid="view-wishlist" class="hidden" style="margin-top:16px;">
+      <div class="card" style="padding:18px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <h2 style="margin:0;font-size:20px;">My Wishlist</h2>
+          <button type="button" class="btn btn-outline btn-sm" onclick="switchView('shop')">← Continue Shopping</button>
+        </div>
+        <div id="wishlistGrid" data-testid="wishlist-grid" class="product-grid"></div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- VIEW 3: CART & SAVE FOR LATER                                       -->
+    <!-- =================================================================== -->
+    <section id="view-cart" data-testid="view-cart" class="hidden">
+      <div class="two-col-main">
+        <div>
+          <div class="card" style="overflow:hidden;margin-bottom:16px;">
+            <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+              <strong style="font-size:16px;">Shopping Cart (<span id="cartHeadingCount">0</span>)</strong>
+              <button type="button" class="btn btn-outline btn-sm" onclick="switchView('shop')">+ Add More Items</button>
+            </div>
+            <div id="cartItemsList" data-testid="cart-items-list"></div>
+          </div>
+
+          <!-- Saved for Later -->
+          <div class="card" style="overflow:hidden;" data-testid="saved-for-later-section">
+            <div style="padding:14px 16px;border-bottom:1px solid var(--border);">
+              <strong style="font-size:15px;">Saved for Later (<span id="savedHeadingCount">0</span>)</strong>
+            </div>
+            <div id="savedItemsList" data-testid="saved-items-list"></div>
+          </div>
+        </div>
+
+        <!-- Price Details & Coupons -->
+        <aside class="card" style="padding:18px;position:sticky;top:72px;" data-testid="cart-price-card">
+          <div style="font-size:13px;font-weight:800;color:var(--muted);text-transform:uppercase;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:12px;">
+            Price Details
+          </div>
+
+          <!-- Coupon Input -->
+          <div style="margin-bottom:14px;">
+            <div style="display:flex;gap:8px;">
+              <input
+                type="text"
+                id="couponInput"
+                data-testid="coupon-input"
+                placeholder="Enter coupon (SAVE10 / FLAT500)"
+                style="flex:1;padding:8px 10px;border:1px solid #cfd5dd;border-radius:8px;font-size:12.5px;text-transform:uppercase;"
+              />
+              <button type="button" id="applyCouponBtn" data-testid="apply-coupon-btn" class="btn btn-primary btn-sm" onclick="applyCoupon()">Apply</button>
+            </div>
+            <div id="couponMsg" data-testid="coupon-msg" style="margin-top:6px;font-size:12px;"></div>
+          </div>
+
+          <div id="priceBreakdown" data-testid="price-breakdown"></div>
+
+          <button
+            type="button"
+            id="proceedCheckoutBtn"
+            data-testid="proceed-checkout-btn"
+            class="btn btn-buy"
+            style="width:100%;margin-top:14px;padding:12px;"
+            onclick="openCheckout()"
+          >
+            Proceed to Checkout →
+          </button>
+        </aside>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- VIEW 4: MULTI-STEP CHECKOUT (LOGIN, ADDRESS, PAYMENT IFRAME)        -->
+    <!-- =================================================================== -->
+    <section id="view-checkout" data-testid="view-checkout" class="hidden">
+      <div class="two-col-main">
+        <div>
+          <!-- Step 1: Login / Account Verification -->
+          <div class="card checkout-step" data-testid="checkout-step-1">
+            <div class="step-header">
+              <div><span class="step-num">1</span><strong>Login &amp; Account</strong></div>
+              <span id="checkoutAuthStatus" data-testid="checkout-auth-status" style="font-size:12px;font-weight:700;"></span>
+            </div>
+            <div class="step-body" id="checkoutStep1Body"></div>
+          </div>
+
+          <!-- Step 2: Delivery Address -->
+          <div class="card checkout-step" data-testid="checkout-step-2">
+            <div class="step-header">
+              <div><span class="step-num">2</span><strong>Delivery Address</strong></div>
+              <button type="button" class="btn btn-outline btn-sm" data-testid="toggle-add-address-btn" onclick="toggleAddressForm()">+ Add New Address</button>
+            </div>
+            <div class="step-body">
+              <div id="addressList" data-testid="address-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+
+              <form id="addAddressForm" data-testid="add-address-form" class="hidden" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);" novalidate>
+                <div class="form-grid">
+                  <div class="field"><label for="addrName">Full Name</label><input id="addrName" data-testid="addr-name" required /></div>
+                  <div class="field"><label for="addrPhone">10-Digit Phone</label><input id="addrPhone" data-testid="addr-phone" maxlength="10" required /></div>
+                  <div class="field"><label for="addrPin">6-Digit Pincode</label><input id="addrPin" data-testid="addr-pincode" maxlength="6" required /></div>
+                  <div class="field"><label for="addrCity">City</label><input id="addrCity" data-testid="addr-city" required /></div>
+                </div>
+                <div class="field" style="margin-top:10px;">
+                  <label for="addrLine">Address Line (Flat, Street, Area)</label>
+                  <input id="addrLine" data-testid="addr-line" required />
+                </div>
+                <div style="margin-top:10px;display:flex;align-items:center;gap:14px;font-size:13px;">
+                  <label><input type="radio" name="addrType" value="Home" checked /> Home</label>
+                  <label><input type="radio" name="addrType" value="Work" /> Work</label>
+                </div>
+                <div id="addrFormErr" class="alert-err hidden" style="margin-top:10px;"></div>
+                <div style="margin-top:12px;display:flex;gap:8px;">
+                  <button type="submit" data-testid="save-address-btn" class="btn btn-primary btn-sm">Save &amp; Deliver Here</button>
+                  <button type="button" class="btn btn-outline btn-sm" onclick="toggleAddressForm(false)">Cancel</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Step 3: Payment Options -->
+          <div class="card checkout-step" data-testid="checkout-step-3">
+            <div class="step-header">
+              <div><span class="step-num">3</span><strong>Payment Options</strong></div>
+              <span style="font-size:11.5px;color:var(--green);font-weight:700;">🔒 100% Demo Safe</span>
+            </div>
+            <div class="step-body">
+              <div style="display:flex;flex-direction:column;gap:12px;">
+                <!-- UPI -->
+                <div style="border:1px solid var(--border);border-radius:10px;padding:12px;">
+                  <label style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;cursor:pointer;">
+                    <input type="radio" name="payMethod" value="UPI" data-testid="pay-method-upi" checked onchange="onPayMethodChange()" />
+                    UPI (Google Pay / PhonePe / Paytm)
+                  </label>
+                  <div id="payPanelUPI" style="margin-top:10px;padding-left:24px;">
+                    <input type="text" id="upiIdInput" data-testid="upi-id-input" placeholder="e.g. shopper@upi" style="width:100%;max-width:300px;padding:8px 10px;border:1px solid #cfd5dd;border-radius:8px;font-size:13px;" />
+                    <div style="font-size:11.5px;color:var(--muted);margin-top:4px;">Format: name@bankhandle (e.g. prathamesh@okaxis)</div>
+                  </div>
+                </div>
+
+                <!-- Credit / Debit Card (Isolated Iframe) -->
+                <div style="border:1px solid var(--border);border-radius:10px;padding:12px;">
+                  <label style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;cursor:pointer;">
+                    <input type="radio" name="payMethod" value="CARD" data-testid="pay-method-card" onchange="onPayMethodChange()" />
+                    Credit / Debit Card <span style="font-size:11px;background:#eef4ff;color:var(--blue);padding:2px 7px;border-radius:999px;">Iframe Gateway</span>
+                  </label>
+                  <div id="payPanelCARD" class="hidden" style="margin-top:10px;padding-left:24px;">
+                    <iframe
+                      id="paymentIframe"
+                      data-testid="payment-iframe"
+                      title="Secure Card Payment Gateway"
+                      style="width:100%;height:205px;border:1px solid #cfd5dd;border-radius:10px;background:#f8fafc;"
+                      srcdoc='<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><style>
+  *{box-sizing:border-box;font-family:-apple-system,Segoe UI,Roboto,sans-serif}
+  body{margin:0;padding:12px;background:#f8fafc;color:#1e293b}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+  label{display:block;font-size:11px;font-weight:700;color:#475569;margin-bottom:3px}
+  input{width:100%;padding:7px 9px;border:1px solid #cbd5e1;border-radius:7px;font-size:12.5px}
+  button{margin-top:10px;width:100%;padding:8px;background:#2874f0;color:#fff;border:none;border-radius:7px;font-weight:700;font-size:12.5px;cursor:pointer}
+  button:hover{background:#1c5ed6}
+  .msg{margin-top:7px;font-size:11.5px;font-weight:700}
+</style></head><body>
+  <div>
+    <label for="cardNum">Card Number (16 digits)</label>
+    <input id="cardNum" data-testid="iframe-card-number" placeholder="4111 1111 1111 4242" maxlength="19" />
+  </div>
+  <div class="row">
+    <div><label for="cardExp">Expiry (MM/YY)</label><input id="cardExp" data-testid="iframe-card-expiry" placeholder="08/29" maxlength="5" /></div>
+    <div><label for="cardCvv">CVV (3 digits)</label><input id="cardCvv" data-testid="iframe-card-cvv" type="password" placeholder="123" maxlength="3" /></div>
+  </div>
+  <button type="button" id="verifyCardBtn" data-testid="iframe-verify-card-btn">Verify Card</button>
+  <div id="cardMsg" data-testid="iframe-card-msg" class="msg"></div>
+  <script>
+    document.getElementById("verifyCardBtn").addEventListener("click", function () {
+      const num = document.getElementById("cardNum").value.replace(/\s+/g, "");
+      const exp = document.getElementById("cardExp").value.trim();
+      const cvv = document.getElementById("cardCvv").value.trim();
+      const msg = document.getElementById("cardMsg");
+      if (!/^\d{16}$/.test(num)) { msg.style.color="#d32f2f"; msg.textContent="Enter a valid 16-digit card number."; return; }
+      if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(exp)) { msg.style.color="#d32f2f"; msg.textContent="Enter expiry as MM/YY."; return; }
+      if (!/^\d{3}$/.test(cvv)) { msg.style.color="#d32f2f"; msg.textContent="Enter 3-digit CVV."; return; }
+      msg.style.color="#2e7d32";
+      msg.textContent="✓ Card verified (ending in " + num.slice(-4) + ")";
+      window.parent.postMessage({ type: "FLIPMART_CARD_VERIFIED", last4: num.slice(-4) }, "*");
+    });
+  </script>
+</body></html>'
+                    ></iframe>
+                    <div id="cardVerifyStatus" data-testid="card-verify-status" style="font-size:12px;margin-top:6px;color:var(--muted);">
+                      Verify your card inside the secure iframe above before placing the order.
+                    </div>
+                  </div>
+                </div>
+
+                <!-- No-Cost EMI -->
+                <div style="border:1px solid var(--border);border-radius:10px;padding:12px;">
+                  <label style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;cursor:pointer;">
+                    <input type="radio" name="payMethod" value="EMI" data-testid="pay-method-emi" onchange="onPayMethodChange()" />
+                    No-Cost EMI (Easy Installments)
+                  </label>
+                  <div id="payPanelEMI" class="hidden" style="margin-top:10px;padding-left:24px;">
+                    <select id="emiMonthsSelect" data-testid="emi-months-select" style="padding:8px 10px;border:1px solid #cfd5dd;border-radius:8px;font-size:13px;" onchange="renderCheckoutSummary()">
+                      <option value="3">3 Months (0% p.a.)</option>
+                      <option value="6">6 Months (0% p.a.)</option>
+                      <option value="12">12 Months (0% p.a.)</option>
+                    </select>
+                    <div id="emiCalcPreview" data-testid="emi-calc-preview" style="font-size:12.5px;font-weight:700;color:var(--blue);margin-top:6px;"></div>
+                  </div>
+                </div>
+
+                <!-- Cash on Delivery -->
+                <div style="border:1px solid var(--border);border-radius:10px;padding:12px;">
+                  <label style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;cursor:pointer;">
+                    <input type="radio" name="payMethod" value="COD" data-testid="pay-method-cod" onchange="onPayMethodChange()" />
+                    Cash on Delivery (Pay at doorstep)
+                  </label>
+                </div>
+              </div>
+
+              <div id="checkoutError" data-testid="checkout-error" class="alert-err hidden" style="margin-top:14px;"></div>
+
+              <button
+                type="button"
+                id="placeOrderBtn"
+                data-testid="place-order-btn"
+                class="btn btn-buy"
+                style="width:100%;margin-top:16px;padding:13px;font-size:15px;"
+                onclick="placeOrder()"
+              >
+                Place Order
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Order Summary Sidebar -->
+        <aside class="card" style="padding:18px;position:sticky;top:72px;" data-testid="checkout-summary-card">
+          <div style="font-size:13px;font-weight:800;color:var(--muted);text-transform:uppercase;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:12px;">
+            Order Summary
+          </div>
+          <div id="checkoutSummaryBody"></div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- VIEW 5: ORDERS, TRACKER & INVOICE DOWNLOAD                          -->
+    <!-- =================================================================== -->
+    <section id="view-orders" data-testid="view-orders" class="hidden" style="margin-top:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <h2 style="margin:0;font-size:20px;">My Orders</h2>
+        <button type="button" class="btn btn-outline btn-sm" onclick="switchView('shop')">← Back to Shop</button>
+      </div>
+      <div id="ordersList" data-testid="orders-list" style="display:flex;flex-direction:column;gap:14px;"></div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- VIEW 6: QA AUTOMATION LAB                                           -->
+    <!-- =================================================================== -->
+    <section id="view-qalab" data-testid="view-qalab" class="hidden" style="margin-top:16px;">
+      <div class="card" style="padding:20px;">
+        <h2 style="margin:0 0 6px;font-size:20px;">Playwright &amp; QA Automation Lab</h2>
+        <p style="margin:0 0 18px;font-size:13.5px;color:var(--muted);">
+          Dedicated sandbox tools to practice Open Shadow DOM piercing, async network auto-waiting, and deterministic state testing.
+        </p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;">
+          <div class="card" style="padding:16px;">
+            <strong style="font-size:14px;">1. Open Shadow DOM Widget</strong>
+            <p style="font-size:12px;color:var(--muted);margin:4px 0 12px;">Target <code>[data-testid="shadow-claim-coins-btn"]</code> inside <code>&lt;supercoin-widget&gt;</code>.</p>
+            <supercoin-widget id="labSupercoinWidget" data-testid="lab-supercoin-widget"></supercoin-widget>
+          </div>
+
+          <div class="card" style="padding:16px;">
+            <strong style="font-size:14px;">2. Async Inventory Sync (1.5s Loader)</strong>
+            <p style="font-size:12px;color:var(--muted);margin:4px 0 12px;">Practice Playwright auto-waiting and 500-error assertions.</p>
+            <button type="button" id="syncInventoryBtn" data-testid="sync-inventory-btn" class="btn btn-primary btn-sm" onclick="runAsyncInventorySync()">Fetch Warehouse Status</button>
+            <div id="inventorySyncStatus" data-testid="inventory-sync-status" style="margin-top:12px;font-size:12.5px;color:var(--muted);">
+              Click to query simulated warehouse inventory.
+            </div>
+          </div>
+
+          <div class="card" style="padding:16px;">
+            <strong style="font-size:14px;">3. Quick QA Shortcuts</strong>
+            <p style="font-size:12px;color:var(--muted);margin:4px 0 12px;">Jump straight to common E2E flows.</p>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;">
+              <button type="button" class="btn btn-outline btn-sm" onclick="openModal('qaCheatModal')">Open QA Cheat Sheet</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="openModal('authModal')">Open Login Personas</button>
+              <button type="button" class="btn btn-danger btn-sm" onclick="resetAllData()">Reset Sandbox Data</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===================================================================== -->
+  <!-- MODALS: AUTH, PDP, COMPARE, CANCEL ORDER, QA CHEAT SHEET              -->
+  <!-- ===================================================================== -->
+
+  <!-- Auth Modal (Login + Sign-Up + 2FA OTP + Personas) -->
+  <div id="authModal" data-testid="auth-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-box modal-sm">
+      <div class="modal-head">
+        <strong id="authModalTitle" style="font-size:16px;">Login to FlipMart</strong>
+        <button type="button" class="modal-close" data-testid="auth-modal-close" onclick="closeModal('authModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <!-- Quick Fill Personas -->
+        <div style="background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:14px;">
+          <div style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;margin-bottom:6px;">Quick-Fill QA Personas</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button type="button" class="btn btn-outline btn-sm" data-testid="persona-standard" onclick="fillPersona('shopper@flipmart.in','Pass@1234')">Standard</button>
+            <button type="button" class="btn btn-outline btn-sm" data-testid="persona-plus" onclick="fillPersona('plus@flipmart.in','Plus@1234')">Plus VIP ✦</button>
+            <button type="button" class="btn btn-danger btn-sm" data-testid="persona-blocked" onclick="fillPersona('blocked@flipmart.in','Block@123')">Blocked</button>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div style="display:flex;gap:8px;margin-bottom:14px;">
+          <button type="button" id="tabLoginBtn" data-testid="auth-tab-login" class="btn btn-primary btn-sm" style="flex:1;" onclick="setAuthTab('login')">Login</button>
+          <button type="button" id="tabSignupBtn" data-testid="auth-tab-signup" class="btn btn-outline btn-sm" style="flex:1;" onclick="setAuthTab('signup')">Sign Up</button>
+        </div>
+
+        <div id="authError" data-testid="auth-error" class="alert-err hidden" style="margin-bottom:12px;"></div>
+
+        <!-- Login Form -->
+        <form id="loginForm" data-testid="login-form" novalidate>
+          <div class="field" style="margin-bottom:10px;">
+            <label for="loginEmail">Email</label>
+            <input type="email" id="loginEmail" data-testid="login-email-input" value="shopper@flipmart.in" required />
+          </div>
+          <div class="field" style="margin-bottom:10px;">
+            <label for="loginPass">Password</label>
+            <input type="password" id="loginPass" data-testid="login-password-input" value="Pass@1234" required />
+          </div>
+          <label class="check-row" style="margin-bottom:12px;">
+            <input type="checkbox" id="login2faCheck" data-testid="login-2fa-checkbox" />
+            <span>Enable 2FA OTP challenge (Demo OTP: <strong>123456</strong>)</span>
+          </label>
+          <button type="submit" id="loginSubmitBtn" data-testid="login-submit-btn" class="btn btn-buy" style="width:100%;">Login</button>
+        </form>
+
+        <!-- OTP Form -->
+        <form id="otpForm" data-testid="otp-form" class="hidden" novalidate>
+          <div class="alert-ok" style="margin-bottom:10px;">Enter 6-digit demo OTP: <strong>123456</strong></div>
+          <div class="field" style="margin-bottom:12px;">
+            <label for="otpCodeInput">OTP Code</label>
+            <input type="text" id="otpCodeInput" data-testid="otp-input" maxlength="6" placeholder="123456" />
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button type="button" class="btn btn-outline" style="flex:1;" onclick="cancelOtpStep()">Back</button>
+            <button type="submit" data-testid="otp-verify-btn" class="btn btn-primary" style="flex:2;">Verify OTP</button>
+          </div>
+        </form>
+
+        <!-- Sign Up Form -->
+        <form id="signupForm" data-testid="signup-form" class="hidden" novalidate>
+          <div class="field" style="margin-bottom:10px;">
+            <label for="signupName">Full Name</label>
+            <input type="text" id="signupName" data-testid="signup-name-input" placeholder="e.g. Aditi Sharma" required />
+          </div>
+          <div class="field" style="margin-bottom:10px;">
+            <label for="signupEmail">Email</label>
+            <input type="email" id="signupEmail" data-testid="signup-email-input" placeholder="aditi@example.com" required />
+          </div>
+          <div class="field" style="margin-bottom:12px;">
+            <label for="signupPass">Password (min 6 chars)</label>
+            <input type="password" id="signupPass" data-testid="signup-password-input" placeholder="Create password" required />
+          </div>
+          <button type="submit" data-testid="signup-submit-btn" class="btn btn-primary" style="width:100%;">Create Account</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product Detail Modal (PDP) -->
+  <div id="pdpModal" data-testid="pdp-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-box modal-lg">
+      <div class="modal-head">
+        <strong id="pdpModalHeader" style="font-size:15px;">Product Details</strong>
+        <button type="button" class="modal-close" data-testid="pdp-close-btn" onclick="closeModal('pdpModal')">✕</button>
+      </div>
+      <div class="modal-body" id="pdpModalBody"></div>
+    </div>
+  </div>
+
+  <!-- Product Comparison Modal -->
+  <div id="compareModal" data-testid="compare-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-box modal-lg">
+      <div class="modal-head">
+        <strong style="font-size:16px;">Compare Products (Max 3)</strong>
+        <button type="button" class="modal-close" data-testid="compare-close-btn" onclick="closeModal('compareModal')">✕</button>
+      </div>
+      <div class="modal-body" id="compareModalBody"></div>
+    </div>
+  </div>
+
+  <!-- Cancel Order Confirmation Modal -->
+  <div id="cancelOrderModal" data-testid="cancel-order-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-box modal-sm">
+      <div class="modal-head">
+        <strong style="font-size:16px;">Cancel Order</strong>
+        <button type="button" class="modal-close" onclick="closeModal('cancelOrderModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin:0 0 12px;font-size:13.5px;">Are you sure you want to cancel order <strong id="cancelOrderIdText"></strong>?</p>
+        <div class="field" style="margin-bottom:14px;">
+          <label for="cancelReasonSelect">Reason for Cancellation</label>
+          <select id="cancelReasonSelect" data-testid="cancel-reason-select">
+            <option value="Ordered by mistake">Ordered by mistake</option>
+            <option value="Found better price elsewhere">Found better price elsewhere</option>
+            <option value="Delivery taking too long">Delivery taking too long</option>
+            <option value="Need to change delivery address">Need to change delivery address</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+          <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('cancelOrderModal')">Keep Order</button>
+          <button type="button" id="confirmCancelOrderBtn" data-testid="confirm-cancel-order-btn" class="btn btn-danger btn-sm" onclick="confirmCancelOrder()">Confirm Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QA Cheat Sheet Modal -->
+  <div id="qaCheatModal" data-testid="qa-cheat-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-box">
+      <div class="modal-head">
+        <strong style="font-size:16px;">QA &amp; Playwright Automation Cheat Sheet</strong>
+        <button type="button" class="modal-close" data-testid="qa-cheat-close" onclick="closeModal('qaCheatModal')">✕</button>
+      </div>
+      <div class="modal-body" style="font-size:13px;display:grid;gap:14px;">
+        <div class="card" style="padding:12px;">
+          <strong>Test Accounts (2FA OTP: <code>123456</code>)</strong>
+          <ul style="margin:6px 0 0;padding-left:18px;">
+            <li><strong>Standard Shopper:</strong> <code>shopper@flipmart.in</code> / <code>Pass@1234</code></li>
+            <li><strong>FlipMart Plus VIP (Free Delivery):</strong> <code>plus@flipmart.in</code> / <code>Plus@1234</code></li>
+            <li><strong>Blocked User (Negative Login):</strong> <code>blocked@flipmart.in</code> / <code>Block@123</code></li>
+          </ul>
+        </div>
+        <div class="card" style="padding:12px;">
+          <strong>Coupons &amp; Pincodes</strong>
+          <ul style="margin:6px 0 0;padding-left:18px;">
+            <li><code>SAVE10</code> — 10% off cart subtotal</li>
+            <li><code>FLAT500</code> — ₹500 off on orders ≥ ₹2,000</li>
+            <li><strong>Valid Pincodes:</strong> <code>411018</code>, <code>400001</code>, <code>560001</code> (or any 6 digits except 999999)</li>
+            <li><strong>Unserviceable Pincode:</strong> <code>999999</code> (returns out-of-stock area error)</li>
+          </ul>
+        </div>
+        <div class="card" style="padding:12px;">
+          <strong>Playwright TypeScript Practice Targets</strong>
+          <ul style="margin:6px 0 0;padding-left:18px;">
+            <li><strong>Shadow DOM:</strong> <code>page.getByTestId('supercoin-widget').getByTestId('shadow-claim-coins-btn').click()</code></li>
+            <li><strong>Payment Iframe:</strong> <code>page.frameLocator('[data-testid="payment-iframe"]').getByTestId('iframe-verify-card-btn').click()</code></li>
+            <li><strong>File Download:</strong> <code>const [dl] = await Promise.all([page.waitForEvent('download'), page.getByTestId('download-invoice-FM-2026-1001').click()]);</code></li>
+            <li><strong>Chaos Testing:</strong> Toggle <em>Latency</em> &amp; <em>Simulate 500 Error</em> in the bottom QA bar.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastStack" class="toast-stack" aria-live="polite"></div>
+
+  <!-- ===================================================================== -->
+  <!-- PERSISTENT BOTTOM QA CONTROL BAR                                      -->
+  <!-- ===================================================================== -->
+  <div class="qa-bar" data-testid="qa-control-bar">
+    <div class="qa-bar-inner">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="qa-pill">QA SANDBOX CONTROLS</span>
+        <span style="color:#94a3b8;display:none;" class="qa-hint">FlipMart Playwright Lab</span>
+      </div>
+      <div class="qa-controls">
+        <label style="display:inline-flex;align-items:center;gap:6px;">
+          <span>Latency:</span>
+          <select id="qaLatencySelect" data-testid="qa-latency-select" class="qa-select">
+            <option value="0">0ms</option>
+            <option value="1500">1500ms</option>
+            <option value="3000">3000ms</option>
+          </select>
+        </label>
+        <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;background:#1e293b;padding:4px 10px;border-radius:7px;border:1px solid #334155;">
+          <input type="checkbox" id="qaError500Toggle" data-testid="qa-error500-toggle" style="accent-color:#ef4444;" />
+          <span id="qaError500Text">Simulate 500 Error</span>
+        </label>
+        <button type="button" class="qa-btn" data-testid="qa-reset-btn" onclick="resetAllData()">↺ Reset All Data</button>
+        <button type="button" class="qa-btn" data-testid="qa-cheatsheet-btn" onclick="openModal('qaCheatModal')">📋 QA Cheat Sheet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- APPLICATION JAVASCRIPT                                                -->
+  <!-- ===================================================================== -->
+  <script>
+    /* -----------------------------------------------------------------------
+     * 2. SEED CATALOG & STATE (120 PRODUCTS: 20 PER CATEGORY)
+     * ----------------------------------------------------------------------- */
+    const STORAGE_KEY = 'flipmart_qa_sandbox_v2';
+
+    const RAW_CATALOG = [
+      // ===================== 1. MOBILES (20 PRODUCTS) =====================
+      ['MOB-01','Apple','Mobiles','Apple iPhone 16 Pro (Titanium)',119900,129900,4.8,2418,true,8,'📱','#e0f2fe','6.3" Super Retina XDR · A18 Pro · 48MP Pro Camera',[['128GB',0,'MOB01-128'],['256GB',10000,'MOB01-256'],['512GB',25000,'MOB01-512']]],
+      ['MOB-02','Samsung','Mobiles','Samsung Galaxy S24 Ultra 5G',109999,134999,4.7,1842,true,2,'📲','#ede9fe','6.8" QHD+ AMOLED · Snapdragon 8 Gen 3 · Built-in S Pen',[['256GB',0,'MOB02-256'],['512GB',12000,'MOB02-512']]],
+      ['MOB-03','Google','Mobiles','Google Pixel 9 Pro 5G (Obsidian)',89999,99999,4.6,912,true,0,'📱','#f1f5f9','6.3" LTPO OLED · Tensor G4 · Triple Pro Camera',[['128GB',0,'MOB03-128'],['256GB',8000,'MOB03-256']]],
+      ['MOB-04','OnePlus','Mobiles','OnePlus 13 5G (Midnight Ocean)',69999,74999,4.7,1560,true,14,'📱','#dbeafe','6.82" 2K AMOLED · Snapdragon 8 Elite · 100W SuperVOOC',[['12GB / 256GB',0,'MOB04-256'],['16GB / 512GB',7000,'MOB04-512']]],
+      ['MOB-05','Xiaomi','Mobiles','Xiaomi 14 Ultra 5G (Leica Edition)',99999,119999,4.6,640,true,5,'📷','#e2e8f0','6.73" WQHD+ AMOLED · Leica Quad 50MP · 90W HyperCharge',[['512GB Black',0,'MOB05-BLK'],['512GB White',0,'MOB05-WHT']]],
+      ['MOB-06','Nothing','Mobiles','Nothing Phone (2a) Plus 5G',27999,31999,4.5,2130,true,19,'📱','#f3e8ff','6.7" 120Hz AMOLED · Dimensity 7350 Pro · Glyph Interface',[['8GB / 256GB',0,'MOB06-8G'],['12GB / 256GB',2000,'MOB06-12G']]],
+      ['MOB-07','Motorola','Mobiles','Motorola Edge 50 Pro 5G',31999,36999,4.4,1780,true,11,'📱','#fce7f3','6.7" 144Hz pOLED · Snapdragon 7 Gen 3 · 125W TurboPower',[['8GB / 256GB',0,'MOB07-8G'],['12GB / 256GB',4000,'MOB07-12G']]],
+      ['MOB-08','Vivo','Mobiles','Vivo X100 Pro 5G (ZEISS APO)',89999,96999,4.7,890,true,3,'📱','#e0e7ff','6.78" LTPO AMOLED · Dimensity 9300 · ZEISS 50MP Triple',[['16GB / 512GB',0,'MOB08-512'],['16GB / 1TB',12000,'MOB08-1TB']]],
+      ['MOB-09','Redmi','Mobiles','Redmi Note 14 Pro+ 5G',30999,34999,4.4,3420,true,22,'📱','#ffedd5','6.67" Curved AMOLED · IP68 · 200MP OIS Camera',[['8GB / 128GB',0,'MOB09-128'],['12GB / 256GB',3000,'MOB09-256']]],
+      ['MOB-10','Realme','Mobiles','Realme GT 6T 5G (Fluid Silver)',30999,35999,4.5,2610,true,16,'📱','#dcfce7','6.78" 6000-nit LTPO · Snapdragon 7+ Gen 3 · 120W Charge',[['8GB / 256GB',0,'MOB10-256'],['12GB / 512GB',5000,'MOB10-512']]],
+      ['MOB-11','POCO','Mobiles','POCO F6 5G (Titanium)',29999,33999,4.4,1950,true,12,'📱','#fef3c7','6.67" 1.5K AMOLED · Snapdragon 8s Gen 3 · 90W Turbo',[['8GB / 256GB',0,'MOB11-256'],['12GB / 512GB',4000,'MOB11-512']]],
+      ['MOB-12','iQOO','Mobiles','iQOO 12 5G (Legend Edition)',52999,59999,4.6,1420,true,9,'📱','#f1f5f9','6.78" 144Hz AMOLED · Snapdragon 8 Gen 3 · Q1 Gaming Chip',[['12GB / 256GB',0,'MOB12-256'],['16GB / 512GB',5000,'MOB12-512']]],
+      ['MOB-13','Apple','Mobiles','Apple iPhone 15 (Blue)',65999,79900,4.7,9820,true,15,'📱','#dbeafe','6.1" Super Retina XDR · A16 Bionic · Dynamic Island',[['128GB',0,'MOB13-128'],['256GB',10000,'MOB13-256']]],
+      ['MOB-14','Samsung','Mobiles','Samsung Galaxy A55 5G (Awesome Navy)',39999,45999,4.4,1310,true,18,'📱','#e0f2fe','6.6" 120Hz sAMOLED · Metal Frame · IP67 Water Resistant',[['8GB / 128GB',0,'MOB14-128'],['12GB / 256GB',4000,'MOB14-256']]],
+      ['MOB-15','OnePlus','Mobiles','OnePlus Nord 4 5G (Metal Unibody)',29999,32999,4.5,2840,true,20,'📱','#dcfce7','6.74" 120Hz AMOLED · Snapdragon 7+ Gen 3 · 5500mAh',[['8GB / 128GB',0,'MOB15-128'],['8GB / 256GB',3000,'MOB15-256']]],
+      ['MOB-16','Vivo','Mobiles','Vivo V40 Pro 5G (Ganges Blue)',49999,54999,4.5,770,true,2,'📱','#e0f2fe','6.78" 120Hz AMOLED · ZEISS Portrait · 5500mAh Battery',[['8GB / 256GB',0,'MOB16-256'],['12GB / 512GB',6000,'MOB16-512']]],
+      ['MOB-17','Motorola','Mobiles','Motorola G85 5G (Cobalt Blue)',17999,20999,4.3,4120,false,25,'📱','#ede9fe','6.67" 3D Curved pOLED · 50MP OIS · 5000mAh Battery',[['8GB / 128GB',0,'MOB17-128'],['12GB / 256GB',2000,'MOB17-256']]],
+      ['MOB-18','Realme','Mobiles','Realme Narzo 70 Pro 5G',19999,24999,4.3,3190,false,17,'📱','#fef9c3','6.67" 120Hz AMOLED · Sony IMX890 OIS · Air Gestures',[['8GB / 128GB',0,'MOB18-128'],['8GB / 256GB',2000,'MOB18-256']]],
+      ['MOB-19','Redmi','Mobiles','Redmi 13C 5G (Starlight Black)',10499,13999,4.1,6540,false,30,'📱','#f1f5f9','6.74" 90Hz Display · Dimensity 6100+ · 50MP AI Dual Cam',[['4GB / 128GB',0,'MOB19-4G'],['6GB / 128GB',1500,'MOB19-6G']]],
+      ['MOB-20','Samsung','Mobiles','Samsung Galaxy Z Flip6 5G (Silver)',109999,119999,4.6,510,true,0,'📲','#e2e8f0','6.7" Foldable AMOLED · FlexWindow · Galaxy AI',[['256GB',0,'MOB20-256'],['512GB',12000,'MOB20-512']]],
+
+      // =================== 2. ELECTRONICS (20 PRODUCTS) ===================
+      ['ELE-01','Apple','Electronics','Apple MacBook Air M3 13-inch Laptop',104900,114900,4.9,1540,true,6,'💻','#dbeafe','Apple M3 Chip · 18 Hr Battery · Liquid Retina Display',[['8GB / 256GB',0,'ELE01-256'],['16GB / 512GB',20000,'ELE01-512']]],
+      ['ELE-02','Sony','Electronics','Sony WH-1000XM5 Wireless ANC Headphones',26990,34990,4.7,3120,true,14,'🎧','#e2e8f0','30 Hr Battery · 8 Mics Noise Cancellation · Multipoint BT',[['Midnight Black',0,'ELE02-BLK'],['Platinum Silver',500,'ELE02-SLV']]],
+      ['ELE-03','Apple','Electronics','Apple iPad Air M2 11-inch Wi-Fi Tablet',59900,64900,4.8,980,true,10,'📱','#e0f2fe','M2 Chip · 11" Liquid Retina · Landscape 12MP Camera',[['128GB',0,'ELE03-128'],['256GB',10000,'ELE03-256']]],
+      ['ELE-04','Dell','Electronics','Dell XPS 13 Intel Core Ultra 7 Laptop',139990,159990,4.6,410,true,3,'💻','#f1f5f9','13.4" FHD+ InfinityEdge · 16GB LPDDR5x · 1TB NVMe SSD',[['16GB / 1TB',0,'ELE04-1TB'],['32GB / 1TB',18000,'ELE04-32G']]],
+      ['ELE-05','LG','Electronics','LG UltraGear 27-inch QHD 165Hz Monitor',21999,32000,4.6,1890,true,11,'🖥️','#ede9fe','2560x1440 IPS · 1ms GtG · G-Sync & FreeSync Compatible',[['27-inch QHD',0,'ELE05-27'],['32-inch QHD',6000,'ELE05-32']]],
+      ['ELE-06','JBL','Electronics','JBL Charge 5 Portable Bluetooth Speaker',13999,18999,4.6,2740,true,18,'🔊','#ffedd5','40W Pro Sound · 20 Hr Playtime · IP67 Waterproof + Powerbank',[['Squad Camo',0,'ELE06-CAM'],['Black',0,'ELE06-BLK']]],
+      ['ELE-07','Sony','Electronics','Sony Alpha ZV-E10 Mirrorless Vlog Camera',61490,69990,4.7,720,true,2,'📷','#f1f5f9','24.2MP APS-C Sensor · 4K Video · 16-50mm Power Zoom Lens',[['With 16-50mm Kit',0,'ELE07-KIT'],['Body Only',-7000,'ELE07-BDY']]],
+      ['ELE-08','Anker','Electronics','Anker 20000mAh 65W PD Fast Power Bank',4499,6999,4.5,1630,true,24,'🔋','#dcfce7','65W Laptop Charging · Dual USB-C · Smart Digital Display',[['20000mAh',0,'ELE08-20K'],['24000mAh',2000,'ELE08-24K']]],
+      ['ELE-09','Keychron','Electronics','Keychron K2 Pro Wireless Mechanical Keyboard',9499,11999,4.7,890,true,9,'⌨️','#e0e7ff','QMK/VIA Hot-Swappable · RGB Backlit · Mac & Windows',[['Brown Switch',0,'ELE09-BRN'],['Red Switch',0,'ELE09-RED']]],
+      ['ELE-10','Logitech','Electronics','Logitech MX Master 3S Wireless Mouse',8995,10995,4.8,3420,true,16,'🖱️','#e2e8f0','8000 DPI Glass Sensor · Quiet Clicks · MagSpeed Scroll',[['Graphite',0,'ELE10-GRP'],['Pale Gray',0,'ELE10-GRY']]],
+      ['ELE-11','Samsung','Electronics','Samsung Galaxy Watch 6 Classic LTE',24999,36999,4.5,1120,true,8,'⌚','#dbeafe','Rotating Bezel · Sapphire Crystal · ECG & BP Monitoring',[['43mm Black',0,'ELE11-43'],['47mm Silver',3000,'ELE11-47']]],
+      ['ELE-12','Noise','Electronics','Noise ColorFit Ultra 3 AMOLED Smartwatch',3999,8999,4.2,4510,false,28,'⌚','#fef3c7','1.96" AMOLED · Bluetooth Calling · Metallic Strap',[['Jet Black',0,'ELE12-BLK'],['Forest Green',200,'ELE12-GRN']]],
+      ['ELE-13','Bose','Electronics','Bose QuietComfort Ultra ANC Earbuds',25900,29900,4.6,640,true,0,'🎧','#f3e8ff','World-Class ANC · Spatial Audio · 6 Hr Battery per Charge',[['Black',0,'ELE13-BLK'],['White Smoke',0,'ELE13-WHT']]],
+      ['ELE-14','Xiaomi','Electronics','Xiaomi Pad 7 11.2-inch 144Hz Tablet',27999,34999,4.6,1250,true,12,'📱','#e0f2fe','3.2K 144Hz Display · Snapdragon 7+ Gen 3 · Focus Pen Ready',[['8GB / 128GB',0,'ELE14-128'],['12GB / 256GB',4000,'ELE14-256']]],
+      ['ELE-15','ASUS','Electronics','ASUS ROG Strix G16 Gaming Laptop',119990,143990,4.7,530,true,4,'💻','#fee2e2','Intel Core i7-13650HX · RTX 4060 8GB · 165Hz FHD+',[['16GB / 1TB',0,'ELE15-16G'],['32GB / 1TB',12000,'ELE15-32G']]],
+      ['ELE-16','SanDisk','Electronics','SanDisk Extreme 1TB Portable NVMe SSD',9799,14500,4.7,4120,true,21,'💾','#ffedd5','1050MB/s Read · IP65 Water & Dust Resistant · USB-C',[['1TB',0,'ELE16-1TB'],['2TB',7200,'ELE16-2TB']]],
+      ['ELE-17','Canon','Electronics','Canon EOS R50 Mirrorless Camera Kit',64990,75995,4.6,480,true,5,'📷','#f1f5f9','24.2MP APS-C · Dual Pixel CMOS AF II · RF-S 18-45mm',[['18-45mm Kit',0,'ELE17-18'],['Dual Lens Kit',16000,'ELE17-DL']]],
+      ['ELE-18','boAt','Electronics','boAt Airdopes 141 ANC TWS Earbuds',1499,5990,4.0,12400,false,40,'🎧','#fef9c3','32dB Active Noise Cancellation · 42 Hr Playback · ENx Tech',[['Active Black',0,'ELE18-BLK'],['Bold Blue',0,'ELE18-BLU']]],
+      ['ELE-19','BenQ','Electronics','BenQ GW2490 24-inch Eye-Care IPS Monitor',8990,12990,4.5,2190,true,15,'🖥️','#e0f2fe','100Hz Refresh Rate · Coding Mode · Low Blue Light Plus',[['24-inch',0,'ELE19-24'],['27-inch',3500,'ELE19-27']]],
+      ['ELE-20','TP-Link','Electronics','TP-Link Archer AX55 Wi-Fi 6 Dual-Band Router',4999,7999,4.5,1980,true,19,'📡','#dcfce7','AX3000 Gigabit · 4 High-Gain Antennas · HomeShield Security',[['AX3000',0,'ELE20-30'],['AX5400',3000,'ELE20-54']]],
+
+      // ===================== 3. FASHION (20 PRODUCTS) =====================
+      ['FAS-01','Nike','Fashion','Nike Air Zoom Pegasus 41 Running Shoes',9995,11895,4.6,1290,true,7,'👟','#ffedd5','ReactX Foam · Dual Air Zoom Units · Breathable Mesh',[['UK 8',0,'FAS01-8'],['UK 9',0,'FAS01-9'],['UK 10',0,'FAS01-10']]],
+      ['FAS-02',"Levi's",'Fashion',"Levi's Men's Slim Fit Trucker Denim Jacket",3499,5999,4.4,876,true,15,'🧥','#e0e7ff','100% Cotton Denim · Button Closure · Machine Washable',[['Size M',0,'FAS02-M'],['Size L',0,'FAS02-L'],['Size XL',200,'FAS02-XL']]],
+      ['FAS-03','Manyavar','Fashion',"Manyavar Men's Embroidered Silk Kurta Set",4999,6999,4.5,620,true,12,'👘','#fef3c7','Art Silk Blend · Mandarin Collar · Includes Churidar',[['Size M',0,'FAS03-M'],['Size L',0,'FAS03-L'],['Size XL',0,'FAS03-XL']]],
+      ['FAS-04','U.S. Polo Assn.','Fashion','U.S. Polo Assn. Classic Cotton Polo T-Shirt',1299,2299,4.3,3140,true,25,'👕','#dbeafe','100% Pique Cotton · Ribbed Collar · Regular Fit',[['Navy M',0,'FAS04-M'],['Navy L',0,'FAS04-L'],['White L',0,'FAS04-WHT']]],
+      ['FAS-05','Adidas','Fashion','Adidas Ultraboost Light Running Shoes',13499,18999,4.7,940,true,2,'👟','#e0f2fe','Light BOOST Midsole · Primeknit+ Upper · Continental Sole',[['UK 8',0,'FAS05-8'],['UK 9',0,'FAS05-9']]],
+      ['FAS-06','Titan','Fashion','Titan Neo Analog Leather Strap Watch',3995,5495,4.5,2410,true,18,'⌚','#f1f5f9','Mineral Glass · 50m Water Resistance · Genuine Leather',[['Brown Strap',0,'FAS06-BRN'],['Black Strap',0,'FAS06-BLK']]],
+      ['FAS-07','Wildcraft','Fashion','Wildcraft 35L Waterproof Laptop Backpack',1799,3299,4.4,4320,true,22,'🎒','#dcfce7','16" Laptop Sleeve · Rain Cover Included · Padded Straps',[['Black 35L',0,'FAS07-BLK'],['Teal 35L',100,'FAS07-TEL']]],
+      ['FAS-08','Ray-Ban','Fashion','Ray-Ban Wayfarer Polarized Sunglasses',7490,9990,4.6,810,true,9,'🕶️','#e2e8f0','100% UV400 Protection · Classic Acetate Frame · Polarized',[['Matte Black',0,'FAS08-BLK'],['Tortoise',400,'FAS08-TRT']]],
+      ['FAS-09','H&M','Fashion','H&M Relaxed Fit Cotton Fleece Hoodie',1999,2699,4.3,1890,false,20,'🧥','#f3e8ff','Soft Brushed Fleece · Kangaroo Pocket · Drawstring Hood',[['Size M',0,'FAS09-M'],['Size L',0,'FAS09-L']]],
+      ['FAS-10','Van Heusen','Fashion','Van Heusen Slim Fit Solid Formal Shirt',1499,2599,4.4,2760,true,26,'👔','#e0f2fe','100% Giza Cotton · Wrinkle-Resistant · Full Sleeves',[['White 40',0,'FAS10-40'],['Sky Blue 42',0,'FAS10-42']]],
+      ['FAS-11','Puma','Fashion','Puma Smashic Casual Court Sneakers',2499,4499,4.2,3540,true,19,'👟','#fee2e2','SoftFoam+ Sockliner · Synthetic Upper · Non-Marking Sole',[['UK 8',0,'FAS11-8'],['UK 9',0,'FAS11-9'],['UK 10',0,'FAS11-10']]],
+      ['FAS-12','Biba','Fashion',"Biba Women's Printed Cotton Anarkali Kurta",2199,3599,4.5,1420,true,14,'👗','#fce7f3','Pure Breathable Cotton · Floral Block Print · Calf Length',[['Size S',0,'FAS12-S'],['Size M',0,'FAS12-M'],['Size L',0,'FAS12-L']]],
+      ['FAS-13','Wrangler','Fashion',"Wrangler Men's Regular Tapered Jeans",1899,3299,4.3,2180,true,21,'👖','#dbeafe','Stretch Cotton Denim · 5-Pocket Styling · Mid-Rise',[['Waist 32',0,'FAS13-32'],['Waist 34',0,'FAS13-34']]],
+      ['FAS-14','Casio','Fashion','Casio G-Shock GA-2100 Octagon Watch',8995,9995,4.8,1950,true,0,'⌚','#e2e8f0','Carbon Core Guard · 200m Water Resistant · World Time',[['Stealth Black',0,'FAS14-BLK'],['Navy Blue',0,'FAS14-NVY']]],
+      ['FAS-15','Allen Solly','Fashion',"Allen Solly Men's Textured Chino Trousers",1599,2799,4.3,1670,true,17,'👖','#fef9c3','Cotton Lycra Blend · Slim Tapered Fit · Flat Front',[['Beige 32',0,'FAS15-32'],['Olive 34',0,'FAS15-34']]],
+      ['FAS-16','Fabindia','Fashion','Fabindia Handloom Cotton Nehru Jacket',2990,3490,4.5,530,true,10,'🦺','#ffedd5','Handwoven Cotton · Mandarin Collar · 3 Welt Pockets',[['Size M',0,'FAS16-M'],['Size L',0,'FAS16-L']]],
+      ['FAS-17','Skechers','Fashion','Skechers Go Walk Max Slip-On Shoes',3799,5499,4.5,2890,true,13,'👟','#ecfeff','Air-Cooled Goga Mat · 5GEN Cushioning · Machine Washable',[['UK 8',0,'FAS17-8'],['UK 9',0,'FAS17-9']]],
+      ['FAS-18','Tommy Hilfiger','Fashion','Tommy Hilfiger Genuine Leather Wallet',1899,2999,4.4,1540,true,24,'👛','#f1f5f9','RFID Protected · 6 Card Slots · 2 Currency Compartments',[['Tan Brown',0,'FAS18-TAN'],['Black',0,'FAS18-BLK']]],
+      ['FAS-19','Woodland','Fashion',"Woodland Men's Outdoor Nubuck Boots",3495,4995,4.4,2110,true,3,'🥾','#fef3c7','Genuine Nubuck Leather · Lugged Rubber Sole · Ankle Support',[['UK 8',0,'FAS19-8'],['UK 9',0,'FAS19-9']]],
+      ['FAS-20','Zara','Fashion','Zara Structured Everyday Tote Bag',2890,3590,4.4,780,false,11,'👜','#fce7f3','Pebbled Faux Leather · Magnetic Clasp · Inner Zip Pouch',[['Beige',0,'FAS20-BGE'],['Black',0,'FAS20-BLK']]],
+
+      // ======================= 4. HOME (20 PRODUCTS) ======================
+      ['HOM-01','Green Soul','Home','Green Soul Jupiter Ergonomic Office Chair',8990,15990,4.5,3120,true,12,'🪑','#e0f2fe','Breathable Mesh · 2D Armrests · Adjustable Lumbar Support',[['High Back Black',0,'HOM01-BLK'],['High Back Grey',500,'HOM01-GRY']]],
+      ['HOM-02','Bombay Dyeing','Home','Bombay Dyeing 300TC Cotton King Bedsheet',1699,2999,4.4,2450,true,28,'🛏️','#fce7f3','100% Pure Cotton · 1 King Sheet + 2 Pillow Covers',[['Floral Blue',0,'HOM02-BLU'],['Pastel Mint',0,'HOM02-MNT']]],
+      ['HOM-03','Philips','Home','Philips LED Rechargeable Study Desk Lamp',1299,1999,4.5,3890,true,22,'💡','#fef9c3','3-Step Dimming · EyeComfort LED · USB Rechargeable',[['White',0,'HOM03-WHT'],['Black',100,'HOM03-BLK']]],
+      ['HOM-04','Urban Ladder','Home','Urban Ladder Sheesham Wood Coffee Table',9499,14999,4.6,540,true,2,'🛋️','#ffedd5','Solid Sheesham Wood · Teak Finish · Bottom Storage Shelf',[['Teak Finish',0,'HOM04-TEK'],['Walnut Finish',500,'HOM04-WLN']]],
+      ['HOM-05','Prestige','Home','Prestige Omega Deluxe 5-Pc Cookware Set',2799,4595,4.4,4120,true,19,'🍳','#fee2e2','Granite Non-Stick · Induction Base · Glass Lids Included',[['3-Piece Set',-700,'HOM05-3P'],['5-Piece Set',0,'HOM05-5P']]],
+      ['HOM-06','Story@Home','Home','Story@Home Blackout Door Curtains (Set of 2)',1199,2499,4.3,2980,true,30,'🪟','#ede9fe','Blocks 90% Light · Thermal Insulated · 7 Feet Length',[['7 ft Navy',0,'HOM06-7F'],['9 ft Navy',400,'HOM06-9F']]],
+      ['HOM-07','Ajanta','Home','Ajanta Quartz Silent Sweep Wall Clock',649,999,4.3,5120,false,35,'🕰️','#f1f5f9','12-inch Dial · Non-Ticking Sweep Movement · Glass Cover',[['Classic White',0,'HOM07-WHT'],['Wood Finish',150,'HOM07-WOD']]],
+      ['HOM-08','Wakefit','Home','Wakefit Orthopedic Memory Foam Pillows (2)',1499,2398,4.6,6420,true,24,'🛌','#e0e7ff','Cervical Neck Support · Breathable Washable Outer Cover',[['Set of 2',0,'HOM08-2P'],['Single Pillow',-700,'HOM08-1P']]],
+      ['HOM-09','Solimo','Home','Solimo 4-Tier Modular Metal Storage Rack',2299,3999,4.2,1740,false,16,'🗄️','#e2e8f0','Powder-Coated Steel · 120 kg Load Capacity · Tool-Free Setup',[['4-Tier Black',0,'HOM09-4T'],['5-Tier Black',500,'HOM09-5T']]],
+      ['HOM-10','Sattva','Home','Sattva XXXL Leatherette Bean Bag with Beans',1899,3499,4.3,2310,true,14,'🛋️','#ffedd5','Double-Stitched Faux Leather · Pre-Filled with 2.5kg Beans',[['Tan Brown',0,'HOM10-TAN'],['Classic Black',0,'HOM10-BLK']]],
+      ['HOM-11','Milton','Home','Milton Thermosteel 1L Vacuum Flask Bottle',999,1299,4.6,8920,true,40,'🍼','#ecfeff','24 Hr Hot & Cold · 304 Stainless Steel · Leakproof Lid',[['1000 ml Silver',0,'HOM11-1L'],['1500 ml Silver',350,'HOM11-15L']]],
+      ['HOM-12','Hawkins','Home','Hawkins Contura Hard Anodised Cooker 5L',2599,3150,4.7,5430,true,18,'🍲','#f1f5f9','60-Micron Hard Anodised · Curved Body · Induction Compatible',[['3 Litre',-600,'HOM12-3L'],['5 Litre',0,'HOM12-5L']]],
+      ['HOM-13','Sleepyhead','Home','Sleepyhead Kiki 3-Seater Fabric Sofa',18999,27999,4.5,690,true,0,'🛋️','#dbeafe','Solid Pinewood Frame · High-Density Foam · Stain Resistant',[['3-Seater Grey',0,'HOM13-GRY'],['3-Seater Teal',1000,'HOM13-TEL']]],
+      ['HOM-14','Borosil','Home','Borosil Larah 19-Piece Opalware Dinner Set',1899,2895,4.5,3180,true,20,'🍽️','#dcfce7','Toughened Opal Glass · Microwave & Dishwasher Safe',[['19-Piece',0,'HOM14-19'],['35-Piece',1400,'HOM14-35']]],
+      ['HOM-15','IKEA','Home','IKEA Malm 4-Drawer Wooden Chest',11990,14990,4.6,820,true,3,'🗄️','#fef3c7','Smooth-Running Drawers · Anti-Tip Hardware · Oak Veneer',[['White',0,'HOM15-WHT'],['Oak Veneer',500,'HOM15-OAK']]],
+      ['HOM-16','Spaces','Home','Spaces Geometric Cotton Cushion Covers (5)',799,1499,4.3,1940,false,26,'🛋️','#fce7f3','16x16 inch · Concealed Zipper · 100% Woven Cotton',[['16x16 inch',0,'HOM16-16'],['18x18 inch',200,'HOM16-18']]],
+      ['HOM-17','Wipro','Home','Wipro Garnet 9W Smart Wi-Fi LED Bulbs (2)',1099,1998,4.4,4620,true,32,'💡','#fef9c3','16M RGB Colors · Alexa & Google Assistant · Music Sync',[['Pack of 2',0,'HOM17-2P'],['Pack of 4',950,'HOM17-4P']]],
+      ['HOM-18','Scotch-Brite','Home','Scotch-Brite Jumper Spin Mop with Bucket',1399,2100,4.4,5810,true,21,'🧹','#dcfce7','360° Microfiber Refill · Steel Wringer · Twin Bucket',[['With 2 Refills',0,'HOM18-2R'],['With 4 Refills',300,'HOM18-4R']]],
+      ['HOM-19','Cello','Home','Cello Checkers 18-Pc Modular Kitchen Jars',1149,1899,4.3,3920,false,29,'🫙','#e0f2fe','BPA-Free Food Grade PET · Airtight Seal · Stackable',[['18-Piece Set',0,'HOM19-18'],['24-Piece Set',400,'HOM19-24']]],
+      ['HOM-20','Chumbak','Home','Chumbak Handcrafted Ceramic Planter Set',1495,1995,4.6,640,true,15,'🪴','#dcfce7','Hand-Painted Glazed Ceramic · Drainage Hole · Set of 2',[['Set of 2',0,'HOM20-2P'],['Set of 3',600,'HOM20-3P']]],
+
+      // ==================== 5. APPLIANCES (20 PRODUCTS) ===================
+      ['APP-01','Sony','Appliances','Sony Bravia 55-inch 4K Ultra HD Google TV',57990,99900,4.8,2640,true,8,'📺','#e0f2fe','X1 4K Processor · Dolby Audio · Live Color · 3 HDMI',[['55-inch',0,'APP01-55'],['65-inch',22000,'APP01-65']]],
+      ['APP-02','Philips','Appliances','Philips Digital Air Fryer 5.5L RapidAir',8995,12995,4.6,3490,true,14,'🍳','#fef2f2','1700W · 7 Preset Menus · Touch Screen · 90% Less Fat',[['5.5 Litre',0,'APP02-55'],['7.2 Litre',2500,'APP02-72']]],
+      ['APP-03','LG','Appliances','LG 7 kg 5-Star Direct Drive Front Load Washer',28990,43990,4.6,4120,true,10,'🧺','#e0e7ff','Inverter Direct Drive · Steam Wash · 1200 RPM · Hygiene',[['7 kg',0,'APP03-7K'],['8 kg',5000,'APP03-8K']]],
+      ['APP-04','Samsung','Appliances','Samsung 253L 3-Star Frost-Free Refrigerator',24490,32990,4.5,3180,true,11,'🧊','#ecfeff','Digital Inverter · Convertible 5-in-1 · 20 Yr Warranty',[['253L Steel',0,'APP04-253'],['301L Black',5500,'APP04-301']]],
+      ['APP-05','Daikin','Appliances','Daikin 1.5 Ton 5-Star Inverter Split AC',45490,67200,4.6,2190,true,2,'❄️','#dbeafe','PM 2.5 Filter · Dew Clean Tech · 100% Copper Condenser',[['1.5 Ton 5-Star',0,'APP05-15'],['1.8 Ton 5-Star',9000,'APP05-18']]],
+      ['APP-06','IFB','Appliances','IFB 30L Convection Microwave Oven',13990,18990,4.5,2840,true,13,'♨️','#f1f5f9','101 Auto-Cook Menus · Rotisserie · Stainless Steel Cavity',[['25 Litre',-2000,'APP06-25'],['30 Litre',0,'APP06-30']]],
+      ['APP-07','Sujata','Appliances','Sujata Dynamix 900W Mixer Grinder (3 Jars)',5899,7499,4.7,6820,true,20,'🥤','#fef9c3','900W Heavy-Duty Motor · 90 Min Continuous Run · 22000 RPM',[['3 Jars',0,'APP07-3J'],['With Juicer',700,'APP07-4J']]],
+      ['APP-08','Dyson','Appliances','Dyson V12 Detect Slim Cordless Vacuum',49900,58900,4.8,920,true,0,'🧹','#ede9fe','Laser Dust Detection · 60 Min Runtime · HEPA Filtration',[['V12 Detect Slim',0,'APP08-V12'],['V15 Detect',13000,'APP08-V15']]],
+      ['APP-09','Kent','Appliances','Kent Grand Plus RO+UV+UF Water Purifier',15999,21000,4.4,4510,true,16,'💧','#e0f2fe','9L Storage · Zero Water Wastage · TDS Controller',[['Grand Plus',0,'APP09-GP'],['Grand Star',2000,'APP09-GS']]],
+      ['APP-10','Prestige','Appliances','Prestige PIC 20 1600W Induction Cooktop',1899,3195,4.3,7940,true,26,'🔥','#ffedd5','Indian Menu Presets · Anti-Magnetic Wall · Automatic Voltage',[['1600W',0,'APP10-16'],['2000W',500,'APP10-20']]],
+      ['APP-11','LG','Appliances','LG 43-inch 4K UHD WebOS Smart TV',32490,49990,4.6,3410,true,12,'📺','#dbeafe','α5 AI Processor 4K Gen6 · HDR10 · Magic Remote Ready',[['43-inch',0,'APP11-43'],['50-inch',8500,'APP11-50']]],
+      ['APP-12','Bosch','Appliances','Bosch 8 kg 5-Star AI ActiveWater Washer',34990,51490,4.7,1890,true,7,'🧺','#f1f5f9','EcoSilence Drive · Anti-Tangle · In-Built Heater · 1400 RPM',[['8 kg Silver',0,'APP12-8K'],['9 kg Silver',4500,'APP12-9K']]],
+      ['APP-13','Voltas','Appliances','Voltas 1.5 Ton 3-Star Adjustable Split AC',33990,62990,4.3,5120,true,15,'❄️','#ecfeff','4-in-1 Adjustable Mode · Anti-Dust Filter · Stabilizer Free',[['1.5 Ton 3-Star',0,'APP13-3S'],['1.5 Ton 5-Star',6000,'APP13-5S']]],
+      ['APP-14','Whirlpool','Appliances','Whirlpool 240L Triple-Door Refrigerator',25990,34150,4.5,2760,true,9,'🧊','#e2e8f0','Zeolite Technology · Separate Fruit Crisper · Frost Free',[['240L Alpha Steel',0,'APP14-240'],['265L Steel',2500,'APP14-265']]],
+      ['APP-15','Havells','Appliances','Havells Instanio 15L Storage Water Heater',7499,11990,4.4,3640,true,18,'🚿','#fee2e2','5-Star Rated · Feroglas Tank · Color-Changing LED Ring',[['15 Litre',0,'APP15-15'],['25 Litre',1500,'APP15-25']]],
+      ['APP-16','Atomberg','Appliances','Atomberg Renesa 1200mm BLDC Ceiling Fan',3599,5190,4.5,6190,true,25,'🌀','#e0f2fe','28W Energy Saving · Smart Remote · Boost & Sleep Mode',[['Matte Black',0,'APP16-BLK'],['Pearl White',0,'APP16-WHT']]],
+      ['APP-17','Bajaj','Appliances','Bajaj Majesty 1603T 16L OTG Oven',3999,5999,4.3,2910,false,17,'🍞','#fef3c7','1200W · 60-Min Timer · Baking Tray & Skewers Included',[['16 Litre',0,'APP17-16'],['28 Litre',2400,'APP17-28']]],
+      ['APP-18','Eureka Forbes','Appliances','Eureka Forbes Quick Clean DX Vacuum',3699,4999,4.2,4820,true,19,'🧹','#fee2e2','1200W Suction · Dust Bag Full Indicator · Auto Cord Winder',[['Red/Black',0,'APP18-RED'],['Blue/Grey',200,'APP18-BLU']]],
+      ['APP-19','Crompton','Appliances','Crompton Ozone 75L Desert Air Cooler',9999,17200,4.3,2340,true,3,'🌬️','#ecfeff','4200 CMH Air Delivery · Everlast Pump · Honeycomb Pads',[['75 Litre',0,'APP19-75'],['88 Litre',1500,'APP19-88']]],
+      ['APP-20','Philips','Appliances','Philips Steam Iron GC1905 1440W',1499,2195,4.4,7120,true,30,'👔','#dbeafe','Linished Non-Stick Soleplate · 17g/min Steam · Calc Clean',[['1440W Blue',0,'APP20-14'],['2000W Purple',700,'APP20-20']]],
+
+      // ===================== 6. GROCERY (20 PRODUCTS) =====================
+      ['GRO-01','India Gate','Grocery','India Gate Classic Basmati Rice (Aged 2 Yrs)',649,850,4.6,5110,true,40,'🌾','#dcfce7','Extra Long Grain · Aged 2 Years · Ideal for Biryani',[['5 kg Pack',0,'GRO01-5K'],['10 kg Pack',580,'GRO01-10K']]],
+      ['GRO-02','Borges','Grocery','Borges Extra Virgin Olive Oil (Spain)',1199,1650,4.6,3420,true,25,'🫒','#fef9c3','Cold Pressed · Rich in Antioxidants · Salads & Drizzle',[['1 Litre',0,'GRO02-1L'],['2 Litre',1100,'GRO02-2L']]],
+      ['GRO-03','Happilo','Grocery','Happilo 100% Natural Californian Almonds',449,695,4.5,6240,true,32,'🥜','#ffedd5','Premium Nonpareil · High Protein & Fiber · Resealable Pack',[['500 g',0,'GRO03-500'],['1 kg',420,'GRO03-1K']]],
+      ['GRO-04','Tetley','Grocery','Tetley Lemon & Honey Green Tea (100 Bags)',425,540,4.5,4890,true,36,'🍵','#dcfce7','5x Antioxidants · Vitamin C · Zero Calories',[['100 Tea Bags',0,'GRO04-100'],['200 Tea Bags',380,'GRO04-200']]],
+      ['GRO-05','Blue Tokai','Grocery','Blue Tokai Attikan Estate Roast Coffee',490,560,4.7,1980,true,18,'☕','#f1f5f9','100% Arabica · Medium-Dark Roast · Freshly Roasted',[['250g French Press',0,'GRO05-FP'],['250g Whole Beans',0,'GRO05-WB']]],
+      ['GRO-06','Quaker','Grocery','Quaker Wholegrain Rolled Oats',299,385,4.5,7320,true,42,'🥣','#fef3c7','100% Wholegrain · High Fiber · Helps Manage Cholesterol',[['1.5 kg',0,'GRO06-15'],['2 kg',90,'GRO06-20']]],
+      ['GRO-07','Dabur','Grocery','Dabur 100% Pure Himalayan Honey',385,495,4.4,8120,true,34,'🍯','#fef9c3','NMR Tested Pure · No Added Sugar · Immunity Booster',[['1 kg Bottle',0,'GRO07-1K'],['2 kg Squeezy',340,'GRO07-2K']]],
+      ['GRO-08','Pintola','Grocery','Pintola All Natural Crunchy Peanut Butter',399,525,4.6,9420,true,29,'🥜','#ffedd5','30% Protein · Zero Added Sugar · Roasted Peanuts Only',[['1 kg Crunchy',0,'GRO08-CR'],['1 kg Creamy',0,'GRO08-CM']]],
+      ['GRO-09','Barilla','Grocery','Barilla Durum Wheat Penne Rigate Pasta',245,320,4.6,2140,true,27,'🍝','#fef3c7','100% Italian Durum Wheat · Al Dente in 11 Minutes',[['500 g',0,'GRO09-500'],['1 kg Pack',220,'GRO09-1K']]],
+      ['GRO-10','Lindt','Grocery','Lindt Excellence 85% Cocoa Dark Chocolate',425,499,4.7,1640,true,3,'🍫','#ede9fe','Rich Intense Cocoa · Swiss Master Chocolatiers · 100g',[['100g Bar',0,'GRO10-1B'],['Pack of 3',790,'GRO10-3B']]],
+      ['GRO-11','Everest','Grocery','Everest Garam Masala & Kitchen Spice Combo',289,360,4.5,4310,false,38,'🌶️','#fee2e2','Garam Masala + Kitchen King + Kashmiri Mirch + Turmeric',[['4-Pack Combo',0,'GRO11-4P'],['6-Pack Combo',140,'GRO11-6P']]],
+      ['GRO-12','Amul','Grocery','Amul Pure Cow Desi Ghee (1L Tin)',645,710,4.7,9870,true,24,'🧈','#fef9c3','Rich Aroma · Granular Texture · Vitamin A Enriched',[['1 Litre Tin',0,'GRO12-1L'],['2 Litre Tin',620,'GRO12-2L']]],
+      ['GRO-13','Tata Sampann','Grocery','Tata Sampann Unpolished Toor Dal',199,245,4.5,6540,true,45,'🫘','#fef3c7','Unpolished · Retains Natural Protein · Farm Sourced',[['1 kg',0,'GRO13-1K'],['2 kg',185,'GRO13-2K']]],
+      ['GRO-14','Aashirvaad','Grocery','Aashirvaad Shudh Chakki Whole Wheat Atta',439,515,4.6,11200,true,50,'🌾','#ffedd5','0% Maida · 100% MP Sharbati Wheat · Soft Rotis',[['5 kg Pack',-210,'GRO14-5K'],['10 kg Pack',0,'GRO14-10K']]],
+      ['GRO-15',"Kellogg's",'Grocery',"Kellogg's Real Almond Honey Corn Flakes",349,435,4.4,5410,false,31,'🥣','#fef9c3','Crunchy Corn + Real Almonds & Honey · Iron & B Vitamins',[['650 g',0,'GRO15-650'],['1 kg',160,'GRO15-1K']]],
+      ['GRO-16','Organic India','Grocery','Organic India Tulsi Original Green Tea',249,295,4.6,3120,true,0,'🍵','#dcfce7','USDA Certified Organic · Stress Relieving · 25 Tea Bags',[['25 Bags',0,'GRO16-25'],['100g Loose',120,'GRO16-100']]],
+      ['GRO-17','Fortune','Grocery','Fortune Sunlite Refined Sunflower Oil',165,199,4.5,8760,true,48,'🌻','#fef9c3','Light & Healthy · Vitamin A & D · Everyday Cooking',[['1 Litre Pouch',0,'GRO17-1L'],['5 Litre Jar',650,'GRO17-5L']]],
+      ['GRO-18','True Elements','Grocery','True Elements Raw Chia & Flax Seeds Combo',349,499,4.5,2890,true,22,'🌱','#dcfce7','Omega-3 Rich · Unroasted Superfoods · Weight Management',[['500g Combo',0,'GRO18-500'],['1kg Combo',310,'GRO18-1K']]],
+      ['GRO-19','Nescafe','Grocery','Nescafe Gold Rich & Smooth Instant Coffee',595,695,4.7,4920,true,20,'☕','#fef3c7','Mountain-Grown Arabica · Freeze-Dried · Rich Crema',[['100 g Jar',0,'GRO19-100'],['200 g Jar',540,'GRO19-200']]],
+      ['GRO-20','MTR','Grocery','MTR Instant Rava Idli & Dosa Mix Combo',219,270,4.4,3780,false,35,'🥞','#f1f5f9','Ready in 15 Mins · Authentic South Indian Taste · 1kg Total',[['1 kg Combo',0,'GRO20-1K'],['2 kg Combo',195,'GRO20-2K']]]
+    ];
+
+    const SEED_PRODUCTS = RAW_CATALOG.map(([id, brand, category, title, price, mrp, rating, reviewsCount, assured, stock, icon, bg, specs, variants]) => ({
+      id, brand, category, title, price, mrp, rating, reviewsCount, assured, stock, icon, bg, specs,
+      variants: variants.map(([label, delta, sku]) => ({ label, delta, sku })),
+      reviews: [
+        { user: 'Verified Buyer', rating: Math.round(rating), comment: `Great ${category.toLowerCase()} pick from ${brand}. Worth the price!`, date: '2026-11-14' }
+      ]
+    }));
+
+    const SEED_USERS = {
+      'shopper@flipmart.in': { name: 'Standard Shopper', pass: 'Pass@1234', isPlus: false, blocked: false },
+      'plus@flipmart.in': { name: 'FlipMart Plus VIP', pass: 'Plus@1234', isPlus: true, blocked: false },
+      'blocked@flipmart.in': { name: 'Blocked User', pass: 'Block@123', isPlus: false, blocked: true }
+    };
+
+    function getSeedState() {
+      return {
+        products: JSON.parse(JSON.stringify(SEED_PRODUCTS)),
+        users: JSON.parse(JSON.stringify(SEED_USERS)),
+        currentUser: null,
+        superCoins: 120,
+        dailyCoinClaimed: false,
+        cart: [
+          { productId: 'ELE-02', variantIndex: 0, qty: 1 }
+        ],
+        savedForLater: [],
+        wishlist: ['MOB-01'],
+        compareIds: [],
+        recentlyViewed: [],
+        appliedCoupon: null,
+        addresses: [
+          {
+            id: 'ADDR-1',
+            name: 'Prathamesh Nerkar',
+            phone: '9000012345',
+            pincode: '411018',
+            line: 'Flat 402, Tech Park Residency, Pimpri',
+            city: 'Pimpri-Chinchwad',
+            type: 'Home'
+          }
+        ],
+        selectedAddressId: 'ADDR-1',
+        orders: [
+          {
+            id: 'FM-2026-1001',
+            date: '2026-11-15',
+            status: 'Delivered',
+            paymentMethod: 'UPI (shopper@upi)',
+            address: 'Prathamesh Nerkar, Flat 402, Tech Park Residency, Pimpri-Chinchwad - 411018',
+            total: 8995,
+            items: [{ productId: 'APP-02', title: 'Philips Digital Air Fryer 5.5L RapidAir', variant: '5.5 Litre', qty: 1, price: 8995 }]
+          },
+          {
+            id: 'FM-2026-1002',
+            date: '2026-11-19',
+            status: 'Shipped',
+            paymentMethod: 'Card ending 4242',
+            address: 'Prathamesh Nerkar, Flat 402, Tech Park Residency, Pimpri-Chinchwad - 411018',
+            total: 9995,
+            items: [{ productId: 'FAS-01', title: 'Nike Air Zoom Pegasus 41 Running Shoes', variant: 'UK 9', qty: 1, price: 9995 }]
+          }
+        ],
+        qa: { latencyMs: 0, simulateError500: false }
+      };
+    }
+
+    let state = loadState();
+    let activeView = 'shop';
+    let filterState = {
+      category: 'All',
+      search: '',
+      brands: [],
+      maxPrice: 150000,
+      minRating: 0,
+      excludeOOS: false,
+      sort: 'relevance',
+      page: 1
+    };
+    const PAGE_SIZE = 12;
+    let carouselIndex = 0;
+    let pendingOtpUser = null;
+    let activePdpProductId = null;
+    let activePdpVariantIdx = 0;
+    let verifiedCardLast4 = null;
+    let cancelTargetOrderId = null;
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) {
+          const seed = getSeedState();
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
+          return seed;
+        }
+        return JSON.parse(raw);
+      } catch {
+        return getSeedState();
+      }
+    }
+
+    function saveState() {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
+    }
+
+    function formatINR(num) {
+      return '₹ ' + Math.round(Number(num)).toLocaleString('en-IN');
+    }
+
+    function getProductSVG(icon, bg) {
+      return `
+        <svg viewBox="0 0 160 120" width="128" height="96" role="img" aria-label="Product illustration" style="display:inline-block;max-width:100%;height:auto;">
+          <rect x="6" y="6" width="148" height="108" rx="18" fill="${bg || '#eef4ff'}" />
+          <circle cx="80" cy="60" r="38" fill="rgba(255,255,255,0.65)" />
+          <text x="80" y="74" text-anchor="middle" font-size="44">${icon || '📦'}</text>
+        </svg>
+      `;
+    }
+
+    function waitQA() {
+      return new Promise(res => setTimeout(res, Number(state.qa.latencyMs || 0)));
+    }
+
+    function showToast(msg, type = 'info') {
+      const stack = document.getElementById('toastStack');
+      const el = document.createElement('div');
+      el.className = `toast ${type}`;
+      el.setAttribute('data-testid', 'toast-message');
+      el.innerHTML = `<span>${msg}</span><button type="button" style="background:none;border:none;color:#fff;font-weight:800;">✕</button>`;
+      el.querySelector('button').onclick = () => el.remove();
+      stack.appendChild(el);
+      setTimeout(() => el.remove(), 3500);
+    }
+
+    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+    /* -----------------------------------------------------------------------
+     * 3. OPEN SHADOW DOM WEB COMPONENT: <supercoin-widget>
+     * ----------------------------------------------------------------------- */
+    class SuperCoinWidget extends HTMLElement {
+      constructor() {
+        super();
+        this.attachShadow({ mode: 'open' });
+      }
+      connectedCallback() {
+        this.render();
+      }
+      render() {
+        const coins = state ? state.superCoins : 120;
+        const claimed = state ? state.dailyCoinClaimed : false;
+        this.shadowRoot.innerHTML = `
+          <style>
+            :host { display: block; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+            .wrap {
+              background: linear-gradient(135deg, #1e293b, #0f172a);
+              color: #fff;
+              border-radius: 12px;
+              padding: 14px 16px;
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              gap: 10px;
+              border: 1px solid #334155;
+            }
+            .label { font-size: 10.5px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+            .val { font-size: 20px; font-weight: 800; color: #ffe500; margin-top: 2px; }
+            .sub { font-size: 10.5px; color: #cbd5e1; margin-top: 2px; }
+            button {
+              background: ${claimed ? '#334155' : '#ff9f00'};
+              color: ${claimed ? '#94a3b8' : '#111'};
+              border: none;
+              border-radius: 8px;
+              padding: 8px 11px;
+              font-size: 11.5px;
+              font-weight: 800;
+              cursor: ${claimed ? 'not-allowed' : 'pointer'};
+              white-space: nowrap;
+            }
+            button:hover:not(:disabled) { filter: brightness(1.08); }
+          </style>
+          <div class="wrap">
+            <div>
+              <div class="label">✦ SuperCoins (Shadow DOM)</div>
+              <div class="val" data-testid="shadow-supercoins-balance">${coins} Coins</div>
+              <div class="sub">Earn 2% on every order</div>
+            </div>
+            <button type="button" id="claimBtn" data-testid="shadow-claim-coins-btn" ${claimed ? 'disabled' : ''}>
+              ${claimed ? '✓ Claimed Today' : 'Claim Daily 10 Coins'}
+            </button>
+          </div>
+        `;
+        const btn = this.shadowRoot.getElementById('claimBtn');
+        if (btn && !claimed) {
+          btn.addEventListener('click', () => {
+            state.superCoins += 10;
+            state.dailyCoinClaimed = true;
+            saveState();
+            refreshAllSuperCoinWidgets();
+            showToast('+10 SuperCoins credited to your balance!', 'success');
+          });
+        }
+      }
+    }
+    customElements.define('supercoin-widget', SuperCoinWidget);
+
+    function refreshAllSuperCoinWidgets() {
+      document.querySelectorAll('supercoin-widget').forEach(w => w.render && w.render());
+    }
+
+    /* -----------------------------------------------------------------------
+     * 4. NAVIGATION, HEADER & CATEGORY STRIP
+     * ----------------------------------------------------------------------- */
+    const CATEGORIES = [
+      { name: 'All', icon: '✨' },
+      { name: 'Mobiles', icon: '📱' },
+      { name: 'Electronics', icon: '💻' },
+      { name: 'Fashion', icon: '👟' },
+      { name: 'Home', icon: '🛋️' },
+      { name: 'Appliances', icon: '📺' },
+      { name: 'Grocery', icon: '🌾' }
+    ];
+
+    function renderCategoryStrip() {
+      const strip = document.getElementById('categoryStrip');
+      strip.innerHTML = CATEGORIES.map(c => {
+        const slug = c.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const count = c.name === 'All'
+          ? state.products.length
+          : state.products.filter(p => p.category === c.name).length;
+        return `
+          <button
+            type="button"
+            class="cat-chip ${filterState.category === c.name ? 'active' : ''}"
+            data-testid="cat-chip-${slug}"
+            onclick="selectCategory('${c.name}')"
+          >
+            <span>${c.icon}</span> ${c.name} <span style="opacity:0.8;font-size:11px;">(${count})</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function selectCategory(cat) {
+      filterState.category = cat;
+      filterState.page = 1;
+      document.getElementById('filterCategory').value = cat;
+      renderCategoryStrip();
+      switchView('shop');
+      renderPLP();
+    }
+
+    function switchView(view) {
+      activeView = view;
+      ['shop', 'wishlist', 'cart', 'checkout', 'orders', 'qalab'].forEach(v => {
+        document.getElementById(`view-${v}`).classList.toggle('hidden', v !== view);
+      });
+      document.querySelectorAll('.nav-btn[data-view]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.view === view);
+      });
+      if (view === 'shop') renderPLP();
+      if (view === 'wishlist') renderWishlistView();
+      if (view === 'cart') renderCartView();
+      if (view === 'checkout') renderCheckoutView();
+      if (view === 'orders') renderOrdersView();
+      if (view === 'qalab') refreshAllSuperCoinWidgets();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function updateHeaderBadges() {
+      const cartQty = state.cart.reduce((s, item) => s + item.qty, 0);
+      document.getElementById('cartBadge').textContent = cartQty;
+      document.getElementById('wishlistBadge').textContent = state.wishlist.length;
+      document.getElementById('compareBadge').textContent = state.compareIds.length;
+
+      const authBtn = document.getElementById('authHeaderBtn');
+      const logoutBtn = document.getElementById('logoutHeaderBtn');
+      if (state.currentUser) {
+        authBtn.innerHTML = `${state.currentUser.name.split(' ')[0]} ${state.currentUser.isPlus ? '<span class="plus-pill">PLUS ✦</span>' : ''}`;
+        logoutBtn.classList.remove('hidden');
+      } else {
+        authBtn.textContent = 'Login';
+        logoutBtn.classList.add('hidden');
+      }
+    }
+
+    /* -----------------------------------------------------------------------
+     * 5. LIVE SEARCH & AUTOCOMPLETE
+     * ----------------------------------------------------------------------- */
+    const searchInput = document.getElementById('searchInput');
+    const searchSuggestions = document.getElementById('searchSuggestions');
+
+    searchInput.addEventListener('input', () => {
+      const q = searchInput.value.trim().toLowerCase();
+      if (!q) {
+        searchSuggestions.classList.add('hidden');
+        filterState.search = '';
+        filterState.page = 1;
+        renderPLP();
+        return;
+      }
+      const matches = state.products.filter(p =>
+        p.title.toLowerCase().includes(q) ||
+        p.brand.toLowerCase().includes(q) ||
+        p.category.toLowerCase().includes(q)
+      ).slice(0, 6);
+
+      if (matches.length === 0) {
+        searchSuggestions.innerHTML = `<div style="padding:12px;font-size:12.5px;color:var(--muted);">No products found for "${searchInput.value}"</div>`;
+      } else {
+        searchSuggestions.innerHTML = matches.map(p => `
+          <button type="button" class="suggestion-item" data-testid="suggestion-${p.id}" onclick="selectSuggestion('${p.id}')">
+            <div>
+              <div style="font-weight:600;">${p.icon} ${p.title}</div>
+              <div class="suggestion-meta">in ${p.category} · ${p.brand}</div>
+            </div>
+            <strong style="color:var(--blue);">${formatINR(p.price)}</strong>
+          </button>
+        `).join('');
+      }
+      searchSuggestions.classList.remove('hidden');
+    });
+
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        applySearchFilter();
+      }
+    });
+
+    document.getElementById('searchBtn').addEventListener('click', applySearchFilter);
+
+    function applySearchFilter() {
+      searchSuggestions.classList.add('hidden');
+      filterState.search = searchInput.value.trim().toLowerCase();
+      filterState.page = 1;
+      switchView('shop');
+      renderPLP();
+    }
+
+    function selectSuggestion(productId) {
+      searchSuggestions.classList.add('hidden');
+      openPDP(productId);
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.search-wrap')) {
+        searchSuggestions.classList.add('hidden');
+      }
+    });
+
+    /* -----------------------------------------------------------------------
+     * 6. HERO CAROUSEL & FLASH SALE COUNTDOWN
+     * ----------------------------------------------------------------------- */
+    function goToSlide(idx) {
+      carouselIndex = (idx + 3) % 3;
+      document.querySelectorAll('.slide').forEach((s, i) => s.classList.toggle('active', i === carouselIndex));
+      document.querySelectorAll('.carousel-dot').forEach((d, i) => d.classList.toggle('active', i === carouselIndex));
+    }
+    function moveSlide(delta) { goToSlide(carouselIndex + delta); }
+    setInterval(() => moveSlide(1), 5000);
+
+    let flashSeconds = 4 * 3600 + 59 * 60 + 59;
+    setInterval(() => {
+      flashSeconds = flashSeconds > 0 ? flashSeconds - 1 : 4 * 3600;
+      const h = String(Math.floor(flashSeconds / 3600)).padStart(2, '0');
+      const m = String(Math.floor((flashSeconds % 3600) / 60)).padStart(2, '0');
+      const s = String(flashSeconds % 60).padStart(2, '0');
+      const el = document.getElementById('flashTimer');
+      if (el) el.textContent = `${h}:${m}:${s}`;
+    }, 1000);
+
+    /* -----------------------------------------------------------------------
+     * 7. AUTHENTICATION (LOGIN, SIGN-UP, 2FA OTP, PERSONAS)
+     * ----------------------------------------------------------------------- */
+    function handleAuthHeaderClick() {
+      if (state.currentUser) {
+        switchView('orders');
+      } else {
+        setAuthTab('login');
+        openModal('authModal');
+      }
+    }
+
+    function fillPersona(email, pass) {
+      setAuthTab('login');
+      document.getElementById('loginEmail').value = email;
+      document.getElementById('loginPass').value = pass;
+      document.getElementById('authError').classList.add('hidden');
+    }
+
+    function setAuthTab(tab) {
+      document.getElementById('authError').classList.add('hidden');
+      document.getElementById('otpForm').classList.add('hidden');
+      document.getElementById('loginForm').classList.toggle('hidden', tab !== 'login');
+      document.getElementById('signupForm').classList.toggle('hidden', tab !== 'signup');
+      document.getElementById('tabLoginBtn').className = tab === 'login' ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm';
+      document.getElementById('tabSignupBtn').className = tab === 'signup' ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm';
+      document.getElementById('authModalTitle').textContent = tab === 'login' ? 'Login to FlipMart' : 'Create FlipMart Account';
+    }
+
+    function cancelOtpStep() {
+      pendingOtpUser = null;
+      document.getElementById('otpForm').classList.add('hidden');
+      document.getElementById('loginForm').classList.remove('hidden');
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+      const pass = document.getElementById('loginPass').value;
+      const use2fa = document.getElementById('login2faCheck').checked;
+      const err = document.getElementById('authError');
+      err.classList.add('hidden');
+
+      const btn = document.getElementById('loginSubmitBtn');
+      btn.disabled = true; btn.textContent = 'Signing in...';
+      await waitQA();
+      btn.disabled = false; btn.textContent = 'Login';
+
+      if (state.qa.simulateError500) {
+        err.textContent = 'HTTP 500 Internal Server Error: Auth service unavailable.';
+        err.classList.remove('hidden');
+        return;
+      }
+
+      const u = state.users[email];
+      if (!u || u.pass !== pass) {
+        err.textContent = 'Invalid email or password. Try a quick-fill persona above.';
+        err.classList.remove('hidden');
+        return;
+      }
+      if (u.blocked) {
+        err.textContent = 'This account has been blocked due to suspicious activity.';
+        err.classList.remove('hidden');
+        return;
+      }
+
+      if (use2fa) {
+        pendingOtpUser = { email, ...u };
+        document.getElementById('loginForm').classList.add('hidden');
+        document.getElementById('otpForm').classList.remove('hidden');
+        return;
+      }
+
+      completeLogin({ email, name: u.name, isPlus: u.isPlus });
+    });
+
+    document.getElementById('otpForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const code = document.getElementById('otpCodeInput').value.trim();
+      const err = document.getElementById('authError');
+      err.classList.add('hidden');
+      await waitQA();
+      if (code !== '123456') {
+        err.textContent = 'Invalid OTP. Please enter 123456.';
+        err.classList.remove('hidden');
+        return;
+      }
+      const u = pendingOtpUser;
+      pendingOtpUser = null;
+      document.getElementById('otpCodeInput').value = '';
+      completeLogin({ email: u.email, name: u.name, isPlus: u.isPlus });
+    });
+
+    document.getElementById('signupForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('signupName').value.trim();
+      const email = document.getElementById('signupEmail').value.trim().toLowerCase();
+      const pass = document.getElementById('signupPass').value;
+      const err = document.getElementById('authError');
+      err.classList.add('hidden');
+
+      if (!name || !email.includes('@') || pass.length < 6) {
+        err.textContent = 'Enter a valid name, email, and password (at least 6 characters).';
+        err.classList.remove('hidden');
+        return;
+      }
+      await waitQA();
+      if (state.qa.simulateError500) {
+        err.textContent = 'HTTP 500 Internal Server Error: Unable to register user.';
+        err.classList.remove('hidden');
+        return;
+      }
+      state.users[email] = { name, pass, isPlus: false, blocked: false };
+      completeLogin({ email, name, isPlus: false });
+    });
+
+    function completeLogin(userObj) {
+      state.currentUser = userObj;
+      saveState();
+      closeModal('authModal');
+      updateHeaderBadges();
+      if (activeView === 'cart') renderCartView();
+      if (activeView === 'checkout') renderCheckoutView();
+      showToast(`Welcome, ${userObj.name}!`, 'success');
+    }
+
+    function logoutUser() {
+      state.currentUser = null;
+      saveState();
+      updateHeaderBadges();
+      if (activeView === 'checkout') renderCheckoutView();
+      showToast('Logged out successfully', 'info');
+    }
+
+    /* -----------------------------------------------------------------------
+     * 8. PLP: FILTERS, SORTING, PAGINATION & RECENTLY VIEWED
+     * ----------------------------------------------------------------------- */
+    function renderBrandFilters() {
+      const brands = [...new Set(state.products.map(p => p.brand))].sort();
+      document.getElementById('brandFilters').innerHTML = brands.map(b => `
+        <label class="check-row">
+          <input
+            type="checkbox"
+            value="${b}"
+            data-testid="filter-brand-${b.toLowerCase().replace(/[^a-z0-9]/g, '')}"
+            ${filterState.brands.includes(b) ? 'checked' : ''}
+            onchange="toggleBrandFilter('${b.replace(/'/g, "\\'")}')"
+          />
+          <span>${b}</span>
+        </label>
+      `).join('');
+    }
+
+    function toggleBrandFilter(brand) {
+      if (filterState.brands.includes(brand)) {
+        filterState.brands = filterState.brands.filter(b => b !== brand);
+      } else {
+        filterState.brands.push(brand);
+      }
+      filterState.page = 1;
+      renderPLP();
+    }
+
+    function onPriceSliderChange(val) {
+      filterState.maxPrice = Number(val);
+      document.getElementById('maxPriceLabel').textContent = formatINR(val);
+      filterState.page = 1;
+      renderPLP();
+    }
+
+    function onFilterChange() {
+      const r = document.querySelector('input[name="minRating"]:checked');
+      filterState.minRating = r ? Number(r.value) : 0;
+      filterState.excludeOOS = document.getElementById('filterExcludeOOS').checked;
+      filterState.page = 1;
+      renderPLP();
+    }
+
+    function setSort(sortKey) {
+      filterState.sort = sortKey;
+      filterState.page = 1;
+      document.querySelectorAll('.sort-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.sort === sortKey);
+      });
+      renderPLP();
+    }
+
+    function clearAllFilters() {
+      filterState = { category: 'All', search: '', brands: [], maxPrice: 150000, minRating: 0, excludeOOS: false, sort: 'relevance', page: 1 };
+      document.getElementById('searchInput').value = '';
+      document.getElementById('filterCategory').value = 'All';
+      document.getElementById('filterMaxPrice').value = '150000';
+      document.getElementById('maxPriceLabel').textContent = formatINR(150000);
+      document.querySelector('input[name="minRating"][value="0"]').checked = true;
+      document.getElementById('filterExcludeOOS').checked = false;
+      setSort('relevance');
+      renderCategoryStrip();
+      renderBrandFilters();
+      renderPLP();
+    }
+
+    function getFilteredProducts() {
+      let list = state.products.filter(p => {
+        if (filterState.category !== 'All' && p.category !== filterState.category) return false;
+        if (filterState.search && !(p.title.toLowerCase().includes(filterState.search) || p.brand.toLowerCase().includes(filterState.search) || p.category.toLowerCase().includes(filterState.search))) return false;
+        if (filterState.brands.length > 0 && !filterState.brands.includes(p.brand)) return false;
+        if (p.price > filterState.maxPrice) return false;
+        if (p.rating < filterState.minRating) return false;
+        if (filterState.excludeOOS && p.stock <= 0) return false;
+        return true;
+      });
+
+      if (filterState.sort === 'price_asc') list.sort((a, b) => a.price - b.price);
+      else if (filterState.sort === 'price_desc') list.sort((a, b) => b.price - a.price);
+      else if (filterState.sort === 'rating') list.sort((a, b) => b.rating - a.rating);
+      return list;
+    }
+
+    function buildProductCardHTML(p) {
+      const disc = Math.round(((p.mrp - p.price) / p.mrp) * 100);
+      const isWish = state.wishlist.includes(p.id);
+      const isComp = state.compareIds.includes(p.id);
+      const stockBadge = p.stock === 0
+        ? `<span class="stock-tag stock-out" data-testid="stock-badge-${p.id}">Out of Stock</span>`
+        : p.stock <= 3
+          ? `<span class="stock-tag stock-low" data-testid="stock-badge-${p.id}">Only ${p.stock} left!</span>`
+          : '';
+
+      return `
+        <article class="card product-card" data-testid="product-card-${p.id}">
+          <div class="card-top-bar">
+            <label class="compare-label">
+              <input type="checkbox" data-testid="compare-check-${p.id}" ${isComp ? 'checked' : ''} onchange="toggleCompare('${p.id}', this)" />
+              Compare
+            </label>
+            <button type="button" class="wishlist-btn ${isWish ? 'active' : ''}" data-testid="wishlist-toggle-${p.id}" onclick="toggleWishlist('${p.id}')" aria-label="Wishlist">
+              ${isWish ? '♥' : '♡'}
+            </button>
+          </div>
+          <div class="product-thumb" data-testid="product-open-${p.id}" onclick="openPDP('${p.id}')">
+            ${getProductSVG(p.icon, p.bg)}
+            ${stockBadge}
+          </div>
+          <div class="product-brand">${p.brand}</div>
+          <div class="product-title" onclick="openPDP('${p.id}')">${p.title}</div>
+          <div class="rating-row">
+            <span class="rating-pill">${p.rating} ★</span>
+            <span style="font-size:12px;color:var(--muted);">(${p.reviewsCount.toLocaleString('en-IN')})</span>
+            ${p.assured ? '<span class="assured-badge">FlipMart Assured</span>' : ''}
+          </div>
+          <div class="price-row">
+            <span class="price-now">${formatINR(p.price)}</span>
+            <span class="price-mrp">${formatINR(p.mrp)}</span>
+            <span class="price-off">${disc}% off</span>
+          </div>
+          <button
+            type="button"
+            class="btn btn-cart btn-sm"
+            style="margin-top:auto;width:100%;"
+            data-testid="quick-add-cart-${p.id}"
+            ${p.stock === 0 ? 'disabled' : ''}
+            onclick="addToCart('${p.id}', 0)"
+          >
+            ${p.stock === 0 ? 'Out of Stock' : '🛒 Add to Cart'}
+          </button>
+        </article>
+      `;
+    }
+
+    function renderPLP() {
+      const all = getFilteredProducts();
+      document.getElementById('resultCount').textContent = all.length;
+
+      const totalPages = Math.max(1, Math.ceil(all.length / PAGE_SIZE));
+      if (filterState.page > totalPages) filterState.page = totalPages;
+      const start = (filterState.page - 1) * PAGE_SIZE;
+      const slice = all.slice(start, start + PAGE_SIZE);
+
+      const grid = document.getElementById('productGrid');
+      if (slice.length === 0) {
+        grid.innerHTML = `<div class="card" style="grid-column:1/-1;padding:36px;text-align:center;color:var(--muted);">No products match your filters. <button type="button" class="btn btn-primary btn-sm" style="margin-left:8px;" onclick="clearAllFilters()">Reset Filters</button></div>`;
+      } else {
+        grid.innerHTML = slice.map(buildProductCardHTML).join('');
+      }
+
+      // Pagination
+      const pag = document.getElementById('paginationBar');
+      let html = `<button type="button" class="page-btn" data-testid="page-prev" ${filterState.page <= 1 ? 'disabled' : ''} onclick="goToPage(${filterState.page - 1})">← Previous</button>`;
+      for (let i = 1; i <= totalPages; i++) {
+        html += `<button type="button" class="page-btn ${i === filterState.page ? 'active' : ''}" data-testid="page-num-${i}" onclick="goToPage(${i})">${i}</button>`;
+      }
+      html += `<button type="button" class="page-btn" data-testid="page-next" ${filterState.page >= totalPages ? 'disabled' : ''} onclick="goToPage(${filterState.page + 1})">Next →</button>`;
+      pag.innerHTML = html;
+
+      renderRecentlyViewed();
+    }
+
+    function goToPage(p) {
+      filterState.page = p;
+      renderPLP();
+      window.scrollTo({ top: 240, behavior: 'smooth' });
+    }
+
+    function renderRecentlyViewed() {
+      const wrap = document.getElementById('recentlyViewedWrap');
+      const list = document.getElementById('recentlyViewedList');
+      const items = state.recentlyViewed.map(id => state.products.find(p => p.id === id)).filter(Boolean);
+      if (items.length === 0) {
+        wrap.classList.add('hidden');
+        return;
+      }
+      wrap.classList.remove('hidden');
+      list.innerHTML = items.map(p => `
+        <div class="recent-item" data-testid="recent-item-${p.id}" onclick="openPDP('${p.id}')">
+          <div style="text-align:center;margin-bottom:6px;">${getProductSVG(p.icon, p.bg)}</div>
+          <div style="font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.title}</div>
+          <div style="font-size:13px;font-weight:800;color:var(--blue);margin-top:2px;">${formatINR(p.price)}</div>
+        </div>
+      `).join('');
+    }
+
+    function clearRecentlyViewed() {
+      state.recentlyViewed = [];
+      saveState();
+      renderRecentlyViewed();
+    }
+
+    /* -----------------------------------------------------------------------
+     * 9. PRODUCT DETAIL MODAL (PDP), PINCODE CHECKER & REVIEWS
+     * ----------------------------------------------------------------------- */
+    function openPDP(productId, variantIdx = 0) {
+      const p = state.products.find(x => x.id === productId);
+      if (!p) return;
+      activePdpProductId = productId;
+      activePdpVariantIdx = variantIdx;
+
+      // Track Recently Viewed
+      state.recentlyViewed = [productId, ...state.recentlyViewed.filter(id => id !== productId)].slice(0, 6);
+      saveState();
+      renderRecentlyViewed();
+
+      renderPDPContent();
+      openModal('pdpModal');
+    }
+
+    function renderPDPContent() {
+      const p = state.products.find(x => x.id === activePdpProductId);
+      const v = p.variants[activePdpVariantIdx] || p.variants[0];
+      const finalPrice = p.price + v.delta;
+      const finalMrp = p.mrp + v.delta;
+      const disc = Math.round(((finalMrp - finalPrice) / finalMrp) * 100);
+      const isWish = state.wishlist.includes(p.id);
+
+      document.getElementById('pdpModalHeader').textContent = `${p.brand} · ${p.category}`;
+      document.getElementById('pdpModalBody').innerHTML = `
+        <div class="pdp-grid">
+          <div>
+            <div style="background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:24px;text-align:center;margin-bottom:12px;">
+              ${getProductSVG(p.icon, p.bg)}
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+              <button type="button" class="btn btn-cart" data-testid="pdp-add-to-cart" ${p.stock === 0 ? 'disabled' : ''} onclick="addToCart('${p.id}', ${activePdpVariantIdx})">
+                🛒 Add to Cart
+              </button>
+              <button type="button" class="btn btn-buy" data-testid="pdp-buy-now" ${p.stock === 0 ? 'disabled' : ''} onclick="buyNow('${p.id}', ${activePdpVariantIdx})">
+                ⚡ Buy Now
+              </button>
+            </div>
+            <button type="button" class="btn btn-outline btn-sm" style="width:100%;margin-top:8px;" data-testid="pdp-wishlist-btn" onclick="toggleWishlist('${p.id}'); renderPDPContent();">
+              ${isWish ? '♥ Wishlisted' : '♡ Add to Wishlist'}
+            </button>
+          </div>
+
+          <div>
+            <h2 style="margin:0 0 6px;font-size:20px;">${p.title}</h2>
+            <div class="rating-row">
+              <span class="rating-pill">${p.rating} ★</span>
+              <span style="font-size:12.5px;color:var(--muted);">${p.reviewsCount.toLocaleString('en-IN')} ratings &amp; ${p.reviews.length} reviews</span>
+              ${p.assured ? '<span class="assured-badge">FlipMart Assured</span>' : ''}
+            </div>
+            <div class="price-row" style="margin:10px 0;">
+              <span class="price-now" data-testid="pdp-price" style="font-size:24px;">${formatINR(finalPrice)}</span>
+              <span class="price-mrp">${formatINR(finalMrp)}</span>
+              <span class="price-off">${disc}% off</span>
+            </div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">
+              SKU: <strong data-testid="pdp-sku">${v.sku}</strong> · Stock: <strong>${p.stock > 0 ? p.stock + ' available' : 'Out of Stock'}</strong>
+            </div>
+            <p style="font-size:13px;background:#f8f9fb;padding:10px 12px;border-radius:8px;margin:0 0 12px;">
+              <strong>Key Specs:</strong> ${p.specs}
+            </p>
+
+            <!-- Variant Selector -->
+            <div style="margin-bottom:14px;">
+              <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;">Select Variant:</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                ${p.variants.map((vr, idx) => `
+                  <button type="button" class="variant-btn ${idx === activePdpVariantIdx ? 'active' : ''}" data-testid="pdp-variant-${idx}" onclick="activePdpVariantIdx=${idx}; renderPDPContent();">
+                    ${vr.label} ${vr.delta > 0 ? '(+' + formatINR(vr.delta) + ')' : ''}
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+
+            <!-- Pincode Delivery Checker -->
+            <div style="border-top:1px solid var(--border);padding-top:12px;margin-bottom:16px;">
+              <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;">Check Delivery Pincode:</div>
+              <div style="display:flex;gap:8px;max-width:340px;">
+                <input type="text" id="pdpPincodeInput" data-testid="pdp-pincode-input" maxlength="6" placeholder="e.g. 411018" style="flex:1;padding:8px 10px;border:1px solid #cfd5dd;border-radius:8px;font-size:13px;" />
+                <button type="button" id="pdpPincodeBtn" data-testid="pdp-pincode-check-btn" class="btn btn-primary btn-sm" onclick="checkPincode()">Check</button>
+              </div>
+              <div id="pdpPincodeResult" data-testid="pdp-pincode-result" style="margin-top:6px;font-size:12.5px;"></div>
+            </div>
+
+            <!-- Customer Reviews -->
+            <div style="border-top:1px solid var(--border);padding-top:14px;">
+              <strong style="font-size:15px;">Customer Reviews (${p.reviews.length})</strong>
+              <div data-testid="pdp-reviews-list" style="display:flex;flex-direction:column;gap:8px;margin:10px 0 14px;">
+                ${p.reviews.map(r => `
+                  <div style="background:#f8f9fb;border:1px solid var(--border);border-radius:8px;padding:10px;">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                      <span class="rating-pill">${r.rating} ★</span>
+                      <strong style="font-size:12.5px;">${r.user}</strong>
+                      <span style="font-size:11px;color:var(--muted);margin-left:auto;">${r.date}</span>
+                    </div>
+                    <div style="font-size:12.5px;">${r.comment}</div>
+                  </div>
+                `).join('')}
+              </div>
+
+              <!-- Submit New Review -->
+              <form id="reviewForm" data-testid="pdp-review-form" onsubmit="submitReview(event)" style="background:#fafbfc;border:1px solid var(--border);border-radius:10px;padding:12px;">
+                <div style="font-size:12.5px;font-weight:700;margin-bottom:8px;">Write a Review</div>
+                <div style="display:flex;gap:8px;margin-bottom:8px;">
+                  <select id="reviewRating" data-testid="review-rating-select" style="padding:7px 9px;border:1px solid #cfd5dd;border-radius:8px;font-size:12.5px;">
+                    <option value="5">5 ★ — Excellent</option>
+                    <option value="4">4 ★ — Very Good</option>
+                    <option value="3">3 ★ — Good</option>
+                    <option value="2">2 ★ — Fair</option>
+                    <option value="1">1 ★ — Poor</option>
+                  </select>
+                  <input type="text" id="reviewComment" data-testid="review-comment-input" placeholder="Share your experience..." style="flex:1;padding:7px 10px;border:1px solid #cfd5dd;border-radius:8px;font-size:12.5px;" required />
+                </div>
+                <div id="reviewErr" data-testid="review-error" class="alert-err hidden" style="margin-bottom:8px;"></div>
+                <button type="submit" id="reviewSubmitBtn" data-testid="review-submit-btn" class="btn btn-primary btn-sm">Submit Review</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    async function checkPincode() {
+      const pin = document.getElementById('pdpPincodeInput').value.trim();
+      const out = document.getElementById('pdpPincodeResult');
+      const btn = document.getElementById('pdpPincodeBtn');
+      out.innerHTML = '<span style="color:var(--muted);">Checking serviceability...</span>';
+      btn.disabled = true;
+      await waitQA();
+      btn.disabled = false;
+
+      if (state.qa.simulateError500) {
+        out.innerHTML = `<span style="color:var(--red);font-weight:700;">HTTP 500: Serviceability API failed.</span>`;
+        return;
+      }
+      if (!/^\d{6}$/.test(pin)) {
+        out.innerHTML = `<span style="color:var(--red);font-weight:700;">Please enter a valid 6-digit Indian pincode.</span>`;
+        return;
+      }
+      if (pin === '999999') {
+        out.innerHTML = `<span style="color:var(--red);font-weight:700;">Currently out of stock in this area (${pin}).</span>`;
+        return;
+      }
+      const isPlus = state.currentUser && state.currentUser.isPlus;
+      out.innerHTML = `<span style="color:var(--green);font-weight:700;">✓ Delivery by Tue, 24 Nov to ${pin} · ${isPlus ? 'FREE (Plus VIP)' : 'Free above ₹999'}</span>`;
+    }
+
+    async function submitReview(e) {
+      e.preventDefault();
+      const rating = Number(document.getElementById('reviewRating').value);
+      const comment = document.getElementById('reviewComment').value.trim();
+      const err = document.getElementById('reviewErr');
+      err.classList.add('hidden');
+
+      if (!comment) {
+        err.textContent = 'Please write a short review comment.';
+        err.classList.remove('hidden');
+        return;
+      }
+      const btn = document.getElementById('reviewSubmitBtn');
+      btn.disabled = true; btn.textContent = 'Submitting...';
+      await waitQA();
+      btn.disabled = false; btn.textContent = 'Submit Review';
+
+      if (state.qa.simulateError500) {
+        err.textContent = 'HTTP 500: Failed to submit review.';
+        err.classList.remove('hidden');
+        return;
+      }
+
+      const p = state.products.find(x => x.id === activePdpProductId);
+      const userName = state.currentUser ? state.currentUser.name : 'Verified Guest';
+      p.reviews.unshift({ user: userName, rating, comment, date: '2026-11-21' });
+      p.reviewsCount += 1;
+      saveState();
+      renderPDPContent();
+      showToast('Review submitted! Thank you.', 'success');
+    }
+
+    /* -----------------------------------------------------------------------
+     * 10. WISHLIST & PRODUCT COMPARISON
+     * ----------------------------------------------------------------------- */
+    function toggleWishlist(productId) {
+      if (state.wishlist.includes(productId)) {
+        state.wishlist = state.wishlist.filter(id => id !== productId);
+        showToast('Removed from Wishlist', 'info');
+      } else {
+        state.wishlist.push(productId);
+        showToast('Added to Wishlist ♥', 'success');
+      }
+      saveState();
+      updateHeaderBadges();
+      if (activeView === 'shop') renderPLP();
+      if (activeView === 'wishlist') renderWishlistView();
+    }
+
+    function renderWishlistView() {
+      const grid = document.getElementById('wishlistGrid');
+      const items = state.wishlist.map(id => state.products.find(p => p.id === id)).filter(Boolean);
+      if (items.length === 0) {
+        grid.innerHTML = `<div style="grid-column:1/-1;padding:30px;text-align:center;color:var(--muted);">Your wishlist is empty.</div>`;
+        return;
+      }
+      grid.innerHTML = items.map(buildProductCardHTML).join('');
+    }
+
+    function toggleCompare(productId, checkboxEl) {
+      if (state.compareIds.includes(productId)) {
+        state.compareIds = state.compareIds.filter(id => id !== productId);
+      } else {
+        if (state.compareIds.length >= 3) {
+          if (checkboxEl) checkboxEl.checked = false;
+          showToast('You can compare up to 3 products at a time.', 'error');
+          return;
+        }
+        state.compareIds.push(productId);
+      }
+      saveState();
+      updateHeaderBadges();
+    }
+
+    function openCompareModal() {
+      const body = document.getElementById('compareModalBody');
+      const items = state.compareIds.map(id => state.products.find(p => p.id === id)).filter(Boolean);
+      if (items.length === 0) {
+        body.innerHTML = `<div style="padding:28px;text-align:center;color:var(--muted);">Select up to 3 products using the <strong>Compare</strong> checkbox on product cards.</div>`;
+      } else {
+        body.innerHTML = `
+          <div style="overflow-x:auto;">
+            <table class="compare-table" data-testid="compare-table">
+              <tr>
+                <th>Product</th>
+                ${items.map(p => `
+                  <td>
+                    <div style="text-align:center;margin-bottom:6px;">${getProductSVG(p.icon, p.bg)}</div>
+                    <strong style="font-size:13.5px;">${p.title}</strong>
+                    <div style="margin-top:8px;display:flex;gap:6px;">
+                      <button type="button" class="btn btn-cart btn-sm" ${p.stock === 0 ? 'disabled' : ''} onclick="addToCart('${p.id}',0)">Add to Cart</button>
+                      <button type="button" class="btn btn-danger btn-sm" data-testid="compare-remove-${p.id}" onclick="removeFromCompare('${p.id}')">Remove</button>
+                    </div>
+                  </td>
+                `).join('')}
+              </tr>
+              <tr><th>Brand</th>${items.map(p => `<td>${p.brand}</td>`).join('')}</tr>
+              <tr><th>Price</th>${items.map(p => `<td><strong>${formatINR(p.price)}</strong></td>`).join('')}</tr>
+              <tr><th>MRP &amp; Discount</th>${items.map(p => `<td><span style="text-decoration:line-through;color:var(--muted);">${formatINR(p.mrp)}</span> <strong style="color:var(--green);">(${Math.round(((p.mrp - p.price) / p.mrp) * 100)}% off)</strong></td>`).join('')}</tr>
+              <tr><th>Rating</th>${items.map(p => `<td><span class="rating-pill">${p.rating} ★</span> (${p.reviewsCount})</td>`).join('')}</tr>
+              <tr><th>Availability</th>${items.map(p => `<td>${p.stock > 0 ? p.stock + ' in stock' : '<strong style="color:var(--red);">Out of Stock</strong>'}</td>`).join('')}</tr>
+              <tr><th>Key Specs</th>${items.map(p => `<td>${p.specs}</td>`).join('')}</tr>
+            </table>
+          </div>
+        `;
+      }
+      openModal('compareModal');
+    }
+
+    function removeFromCompare(id) {
+      state.compareIds = state.compareIds.filter(x => x !== id);
+      saveState();
+      updateHeaderBadges();
+      if (activeView === 'shop') renderPLP();
+      openCompareModal();
+    }
+
+    /* -----------------------------------------------------------------------
+     * 11. CART, SAVE FOR LATER & COUPONS
+     * ----------------------------------------------------------------------- */
+    function addToCart(productId, variantIndex = 0) {
+      const p = state.products.find(x => x.id === productId);
+      if (!p || p.stock <= 0) {
+        showToast('Item is out of stock', 'error');
+        return;
+      }
+      const existing = state.cart.find(c => c.productId === productId && c.variantIndex === variantIndex);
+      if (existing) {
+        if (existing.qty >= p.stock) {
+          showToast(`Max available stock (${p.stock}) reached`, 'error');
+          return;
+        }
+        existing.qty += 1;
+      } else {
+        state.cart.push({ productId, variantIndex, qty: 1 });
+      }
+      saveState();
+      updateHeaderBadges();
+      showToast(`Added "${p.title}" to cart`, 'success');
+    }
+
+    function buyNow(productId, variantIndex = 0) {
+      addToCart(productId, variantIndex);
+      closeModal('pdpModal');
+      openCheckout();
+    }
+
+    function calculateCartTotals() {
+      let mrpTotal = 0;
+      let sellingTotal = 0;
+      state.cart.forEach(item => {
+        const p = state.products.find(x => x.id === item.productId);
+        if (!p) return;
+        const v = p.variants[item.variantIndex] || p.variants[0];
+        mrpTotal += (p.mrp + v.delta) * item.qty;
+        sellingTotal += (p.price + v.delta) * item.qty;
+      });
+      const productDiscount = mrpTotal - sellingTotal;
+
+      let couponDiscount = 0;
+      if (state.appliedCoupon === 'SAVE10') {
+        couponDiscount = Math.round(sellingTotal * 0.10);
+      } else if (state.appliedCoupon === 'FLAT500') {
+        if (sellingTotal >= 2000) couponDiscount = 500;
+        else state.appliedCoupon = null;
+      }
+
+      const isPlus = state.currentUser && state.currentUser.isPlus;
+      const delivery = (sellingTotal === 0 || isPlus || sellingTotal >= 999) ? 0 : 40;
+      const grandTotal = Math.max(0, sellingTotal - couponDiscount + delivery);
+      const totalSavings = productDiscount + couponDiscount + (delivery === 0 && sellingTotal > 0 ? 40 : 0);
+
+      return { mrpTotal, sellingTotal, productDiscount, couponDiscount, delivery, grandTotal, totalSavings };
+    }
+
+    function renderCartView() {
+      const list = document.getElementById('cartItemsList');
+      const savedList = document.getElementById('savedItemsList');
+      document.getElementById('cartHeadingCount').textContent = state.cart.reduce((s, i) => s + i.qty, 0);
+      document.getElementById('savedHeadingCount').textContent = state.savedForLater.length;
+
+      if (state.cart.length === 0) {
+        list.innerHTML = `<div style="padding:32px;text-align:center;color:var(--muted);">Your cart is empty! <button type="button" class="btn btn-primary btn-sm" style="margin-left:8px;" onclick="switchView('shop')">Shop Now</button></div>`;
+      } else {
+        list.innerHTML = state.cart.map((item, idx) => {
+          const p = state.products.find(x => x.id === item.productId);
+          if (!p) return '';
+          const v = p.variants[item.variantIndex] || p.variants[0];
+          const unitPrice = p.price + v.delta;
+          const unitMrp = p.mrp + v.delta;
+          return `
+            <div class="cart-item" data-testid="cart-item-${p.id}">
+              <div style="width:90px;text-align:center;cursor:pointer;" onclick="openPDP('${p.id}', ${item.variantIndex})">${getProductSVG(p.icon, p.bg)}</div>
+              <div style="flex:1;min-width:200px;">
+                <div style="font-weight:700;font-size:14.5px;">${p.title}</div>
+                <div style="font-size:12px;color:var(--muted);margin:2px 0 6px;">Variant: ${v.label} · Seller: FlipMart Retail</div>
+                <div class="price-row" style="margin-bottom:10px;">
+                  <span class="price-now">${formatINR(unitPrice * item.qty)}</span>
+                  <span class="price-mrp">${formatINR(unitMrp * item.qty)}</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                  <div class="qty-box">
+                    <button type="button" data-testid="cart-dec-${p.id}" onclick="updateCartQty(${idx}, -1)">−</button>
+                    <span data-testid="cart-qty-${p.id}">${item.qty}</span>
+                    <button type="button" data-testid="cart-inc-${p.id}" onclick="updateCartQty(${idx}, 1)">+</button>
+                  </div>
+                  <button type="button" class="btn btn-outline btn-sm" data-testid="save-for-later-${p.id}" onclick="saveForLater(${idx})">Save for Later</button>
+                  <button type="button" class="btn btn-danger btn-sm" data-testid="remove-cart-${p.id}" onclick="removeFromCart(${idx})">Remove</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      if (state.savedForLater.length === 0) {
+        savedList.innerHTML = `<div style="padding:18px;text-align:center;font-size:12.5px;color:var(--muted);">No items saved for later.</div>`;
+      } else {
+        savedList.innerHTML = state.savedForLater.map((item, idx) => {
+          const p = state.products.find(x => x.id === item.productId);
+          if (!p) return '';
+          const v = p.variants[item.variantIndex] || p.variants[0];
+          return `
+            <div class="cart-item" data-testid="saved-item-${p.id}">
+              <div style="width:70px;">${getProductSVG(p.icon, p.bg)}</div>
+              <div style="flex:1;">
+                <div style="font-weight:700;font-size:13.5px;">${p.title} (${v.label})</div>
+                <div style="font-weight:800;margin:4px 0 8px;">${formatINR(p.price + v.delta)}</div>
+                <div style="display:flex;gap:8px;">
+                  <button type="button" class="btn btn-primary btn-sm" data-testid="move-to-cart-${p.id}" onclick="moveToCart(${idx})">Move to Cart</button>
+                  <button type="button" class="btn btn-outline btn-sm" onclick="removeSaved(${idx})">Remove</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      const totals = calculateCartTotals();
+      const couponMsg = document.getElementById('couponMsg');
+      if (state.appliedCoupon) {
+        couponMsg.innerHTML = `<span style="color:var(--green);font-weight:700;">✓ Coupon <strong>${state.appliedCoupon}</strong> applied!</span> <button type="button" style="background:none;border:none;color:var(--red);font-size:11.5px;font-weight:700;text-decoration:underline;" onclick="removeCoupon()">Remove</button>`;
+      }
+
+      document.getElementById('priceBreakdown').innerHTML = `
+        <div class="price-line"><span>MRP Total</span><span>${formatINR(totals.mrpTotal)}</span></div>
+        <div class="price-line"><span>Product Discount</span><span style="color:var(--green);">− ${formatINR(totals.productDiscount)}</span></div>
+        ${totals.couponDiscount > 0 ? `<div class="price-line"><span>Coupon (${state.appliedCoupon})</span><span style="color:var(--green);">− ${formatINR(totals.couponDiscount)}</span></div>` : ''}
+        <div class="price-line"><span>Delivery Charges</span><span style="color:${totals.delivery === 0 ? 'var(--green)' : 'var(--text)'};font-weight:700;">${totals.delivery === 0 ? 'FREE' : formatINR(totals.delivery)}</span></div>
+        <div class="price-total"><span>Total Amount</span><span data-testid="cart-grand-total">${formatINR(totals.grandTotal)}</span></div>
+        ${totals.totalSavings > 0 ? `<div style="font-size:12.5px;font-weight:700;color:var(--green);margin-top:4px;">You will save ${formatINR(totals.totalSavings)} on this order!</div>` : ''}
+      `;
+      document.getElementById('proceedCheckoutBtn').disabled = state.cart.length === 0;
+    }
+
+    function updateCartQty(idx, delta) {
+      const item = state.cart[idx];
+      const p = state.products.find(x => x.id === item.productId);
+      const next = item.qty + delta;
+      if (next <= 0) {
+        state.cart.splice(idx, 1);
+      } else if (next > p.stock) {
+        showToast(`Only ${p.stock} units available in stock`, 'error');
+        return;
+      } else {
+        item.qty = next;
+      }
+      saveState();
+      updateHeaderBadges();
+      renderCartView();
+    }
+
+    function removeFromCart(idx) {
+      state.cart.splice(idx, 1);
+      saveState();
+      updateHeaderBadges();
+      renderCartView();
+      showToast('Item removed from cart', 'info');
+    }
+
+    function saveForLater(idx) {
+      const [item] = state.cart.splice(idx, 1);
+      state.savedForLater.push(item);
+      saveState();
+      updateHeaderBadges();
+      renderCartView();
+      showToast('Saved for later', 'info');
+    }
+
+    function moveToCart(idx) {
+      const [item] = state.savedForLater.splice(idx, 1);
+      addToCart(item.productId, item.variantIndex);
+      saveState();
+      renderCartView();
+    }
+
+    function removeSaved(idx) {
+      state.savedForLater.splice(idx, 1);
+      saveState();
+      renderCartView();
+    }
+
+    function applyCoupon() {
+      const code = document.getElementById('couponInput').value.trim().toUpperCase();
+      const msg = document.getElementById('couponMsg');
+      const totals = calculateCartTotals();
+
+      if (code === 'SAVE10') {
+        state.appliedCoupon = 'SAVE10';
+        saveState();
+        renderCartView();
+        showToast('Coupon SAVE10 applied (10% off)', 'success');
+      } else if (code === 'FLAT500') {
+        if (totals.sellingTotal < 2000) {
+          msg.innerHTML = `<span style="color:var(--red);font-weight:700;">FLAT500 requires a minimum cart value of ₹ 2,000.</span>`;
+          return;
+        }
+        state.appliedCoupon = 'FLAT500';
+        saveState();
+        renderCartView();
+        showToast('Coupon FLAT500 applied (₹ 500 off)', 'success');
+      } else {
+        msg.innerHTML = `<span style="color:var(--red);font-weight:700;">Invalid coupon code. Try SAVE10 or FLAT500.</span>`;
+      }
+    }
+
+    function removeCoupon() {
+      state.appliedCoupon = null;
+      document.getElementById('couponInput').value = '';
+      document.getElementById('couponMsg').innerHTML = '';
+      saveState();
+      renderCartView();
+    }
+
+    /* -----------------------------------------------------------------------
+     * 12. MULTI-STEP CHECKOUT & PAYMENT IFRAME POSTMESSAGE
+     * ----------------------------------------------------------------------- */
+    window.addEventListener('message', (event) => {
+      if (event.data && event.data.type === 'FLIPMART_CARD_VERIFIED') {
+        verifiedCardLast4 = event.data.last4;
+        const st = document.getElementById('cardVerifyStatus');
+        if (st) {
+          st.innerHTML = `<span style="color:var(--green);font-weight:700;">✓ Card ending in ${verifiedCardLast4} verified and ready for payment.</span>`;
+        }
+        showToast(`Card ending in ${verifiedCardLast4} verified`, 'success');
+      }
+    });
+
+    function openCheckout() {
+      if (state.cart.length === 0) {
+        showToast('Add at least one item to checkout', 'error');
+        return;
+      }
+      verifiedCardLast4 = null;
+      switchView('checkout');
+    }
+
+    function renderCheckoutView() {
+      // Step 1: Account
+      const st = document.getElementById('checkoutAuthStatus');
+      const body1 = document.getElementById('checkoutStep1Body');
+      if (state.currentUser) {
+        st.innerHTML = `<span style="color:var(--green);">✓ Verified</span>`;
+        body1.innerHTML = `<div style="font-size:13.5px;">Logged in as <strong>${state.currentUser.name}</strong> (${state.currentUser.email}) ${state.currentUser.isPlus ? '<span class="plus-pill">PLUS VIP</span>' : ''}</div>`;
+      } else {
+        st.innerHTML = `<span style="color:var(--orange);">Action Required</span>`;
+        body1.innerHTML = `
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+            <span style="font-size:13px;color:var(--muted);">Please sign in to place your order and earn SuperCoins.</span>
+            <button type="button" class="btn btn-primary btn-sm" data-testid="checkout-login-btn" onclick="openModal('authModal')">Login / Sign Up</button>
+          </div>
+        `;
+      }
+
+      // Step 2: Addresses
+      const addrList = document.getElementById('addressList');
+      addrList.innerHTML = state.addresses.map(a => `
+        <div style="border:1.5px solid ${state.selectedAddressId === a.id ? 'var(--blue)' : 'var(--border)'};background:${state.selectedAddressId === a.id ? '#f8faff' : '#fff'};border-radius:10px;padding:12px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
+          <label style="display:flex;gap:10px;cursor:pointer;flex:1;">
+            <input type="radio" name="selectedAddress" value="${a.id}" data-testid="addr-radio-${a.id}" ${state.selectedAddressId === a.id ? 'checked' : ''} onchange="selectAddress('${a.id}')" />
+            <div style="font-size:13px;">
+              <strong>${a.name}</strong> <span style="background:#e2e8f0;font-size:10.5px;padding:1px 6px;border-radius:4px;font-weight:700;">${a.type}</span> · ${a.phone}
+              <div style="color:var(--muted);margin-top:2px;">${a.line}, ${a.city} — <strong>${a.pincode}</strong></div>
+            </div>
+          </label>
+          ${state.addresses.length > 1 ? `<button type="button" class="btn btn-danger btn-sm" data-testid="delete-addr-${a.id}" onclick="deleteAddress('${a.id}')">Delete</button>` : ''}
+        </div>
+      `).join('');
+
+      onPayMethodChange();
+      renderCheckoutSummary();
+    }
+
+    function selectAddress(id) {
+      state.selectedAddressId = id;
+      saveState();
+      renderCheckoutView();
+    }
+
+    function deleteAddress(id) {
+      state.addresses = state.addresses.filter(a => a.id !== id);
+      if (state.selectedAddressId === id && state.addresses.length > 0) {
+        state.selectedAddressId = state.addresses[0].id;
+      }
+      saveState();
+      renderCheckoutView();
+      showToast('Address deleted', 'info');
+    }
+
+    function toggleAddressForm(force) {
+      const f = document.getElementById('addAddressForm');
+      if (typeof force === 'boolean') f.classList.toggle('hidden', !force);
+      else f.classList.toggle('hidden');
+    }
+
+    document.getElementById('addAddressForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('addrName').value.trim();
+      const phone = document.getElementById('addrPhone').value.trim();
+      const pincode = document.getElementById('addrPin').value.trim();
+      const city = document.getElementById('addrCity').value.trim();
+      const line = document.getElementById('addrLine').value.trim();
+      const type = document.querySelector('input[name="addrType"]:checked').value;
+      const err = document.getElementById('addrFormErr');
+      err.classList.add('hidden');
+
+      if (!name || !/^\d{10}$/.test(phone) || !/^\d{6}$/.test(pincode) || !city || !line) {
+        err.textContent = 'Please fill all fields (10-digit phone and 6-digit pincode required).';
+        err.classList.remove('hidden');
+        return;
+      }
+      const id = 'ADDR-' + Date.now();
+      state.addresses.push({ id, name, phone, pincode, city, line, type });
+      state.selectedAddressId = id;
+      saveState();
+      document.getElementById('addAddressForm').reset();
+      toggleAddressForm(false);
+      renderCheckoutView();
+      showToast('New address saved', 'success');
+    });
+
+    function onPayMethodChange() {
+      const m = document.querySelector('input[name="payMethod"]:checked')?.value || 'UPI';
+      document.getElementById('payPanelUPI').classList.toggle('hidden', m !== 'UPI');
+      document.getElementById('payPanelCARD').classList.toggle('hidden', m !== 'CARD');
+      document.getElementById('payPanelEMI').classList.toggle('hidden', m !== 'EMI');
+      renderCheckoutSummary();
+    }
+
+    function renderCheckoutSummary() {
+      const totals = calculateCartTotals();
+      const months = Number(document.getElementById('emiMonthsSelect')?.value || 3);
+      const emiEl = document.getElementById('emiCalcPreview');
+      if (emiEl) {
+        emiEl.textContent = `Monthly EMI: ${formatINR(totals.grandTotal / months)} / month for ${months} months (0% interest)`;
+      }
+      document.getElementById('checkoutSummaryBody').innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">
+          ${state.cart.map(item => {
+            const p = state.products.find(x => x.id === item.productId);
+            const v = p.variants[item.variantIndex] || p.variants[0];
+            return `<div style="display:flex;justify-content:space-between;font-size:12.5px;"><span>${p.title} (${v.label}) × ${item.qty}</span><strong>${formatINR((p.price + v.delta) * item.qty)}</strong></div>`;
+          }).join('')}
+        </div>
+        <div class="price-line"><span>Delivery</span><span style="color:${totals.delivery === 0 ? 'var(--green)' : 'var(--text)'};font-weight:700;">${totals.delivery === 0 ? 'FREE' : formatINR(totals.delivery)}</span></div>
+        ${totals.couponDiscount > 0 ? `<div class="price-line"><span>Coupon (${state.appliedCoupon})</span><span style="color:var(--green);">− ${formatINR(totals.couponDiscount)}</span></div>` : ''}
+        <div class="price-total"><span>Total Payable</span><span data-testid="checkout-total">${formatINR(totals.grandTotal)}</span></div>
+      `;
+    }
+
+    async function placeOrder() {
+      const err = document.getElementById('checkoutError');
+      err.classList.add('hidden');
+
+      if (!state.currentUser) {
+        err.textContent = 'Please login in Step 1 before placing your order.';
+        err.classList.remove('hidden');
+        return;
+      }
+      const addr = state.addresses.find(a => a.id === state.selectedAddressId);
+      if (!addr) {
+        err.textContent = 'Please select or add a delivery address.';
+        err.classList.remove('hidden');
+        return;
+      }
+
+      const method = document.querySelector('input[name="payMethod"]:checked').value;
+      let paymentLabel = 'Cash on Delivery';
+
+      if (method === 'UPI') {
+        const upi = document.getElementById('upiIdInput').value.trim();
+        if (!/^[a-zA-Z0-9._-]+@[a-zA-Z]{2,}$/.test(upi)) {
+          err.textContent = 'Please enter a valid UPI ID (e.g. shopper@upi).';
+          err.classList.remove('hidden');
+          return;
+        }
+        paymentLabel = `UPI (${upi})`;
+      } else if (method === 'CARD') {
+        if (!verifiedCardLast4) {
+          err.textContent = 'Please verify your card inside the secure payment iframe first.';
+          err.classList.remove('hidden');
+          return;
+        }
+        paymentLabel = `Card ending ${verifiedCardLast4}`;
+      } else if (method === 'EMI') {
+        const months = document.getElementById('emiMonthsSelect').value;
+        paymentLabel = `No-Cost EMI (${months} Months)`;
+      }
+
+      const btn = document.getElementById('placeOrderBtn');
+      btn.disabled = true; btn.textContent = 'Placing Order...';
+      await waitQA();
+      btn.disabled = false; btn.textContent = 'Place Order';
+
+      if (state.qa.simulateError500) {
+        err.textContent = 'HTTP 500 Internal Server Error: Order placement gateway timed out.';
+        err.classList.remove('hidden');
+        showToast('Order failed (Simulated 500)', 'error');
+        return;
+      }
+
+      const totals = calculateCartTotals();
+      const orderItems = [];
+      state.cart.forEach(item => {
+        const p = state.products.find(x => x.id === item.productId);
+        const v = p.variants[item.variantIndex] || p.variants[0];
+        p.stock = Math.max(0, p.stock - item.qty);
+        orderItems.push({ productId: p.id, title: p.title, variant: v.label, qty: item.qty, price: p.price + v.delta });
+      });
+
+      const orderId = 'FM-2026-' + Math.floor(1003 + Math.random() * 8990);
+      state.orders.unshift({
+        id: orderId,
+        date: '2026-11-21',
+        status: 'Order Confirmed',
+        paymentMethod: paymentLabel,
+        address: `${addr.name}, ${addr.line}, ${addr.city} - ${addr.pincode}`,
+        total: totals.grandTotal,
+        items: orderItems
+      });
+
+      const earnedCoins = Math.min(100, Math.max(5, Math.round(totals.grandTotal * 0.02)));
+      state.superCoins += earnedCoins;
+      state.cart = [];
+      state.appliedCoupon = null;
+      verifiedCardLast4 = null;
+      saveState();
+      updateHeaderBadges();
+      refreshAllSuperCoinWidgets();
+      switchView('orders');
+      showToast(`Order ${orderId} placed! Earned +${earnedCoins} SuperCoins`, 'success');
+    }
+
+    /* -----------------------------------------------------------------------
+     * 13. ORDERS, 4-STEP TRACKER, CANCEL MODAL & INVOICE DOWNLOAD
+     * ----------------------------------------------------------------------- */
+    const TRACK_STAGES = ['Order Confirmed', 'Shipped', 'Out for Delivery', 'Delivered'];
+
+    function renderOrdersView() {
+      const wrap = document.getElementById('ordersList');
+      if (state.orders.length === 0) {
+        wrap.innerHTML = `<div class="card" style="padding:30px;text-align:center;color:var(--muted);">No orders placed yet.</div>`;
+        return;
+      }
+      wrap.innerHTML = state.orders.map(o => {
+        const isCancelled = o.status === 'Cancelled';
+        const stageIdx = TRACK_STAGES.indexOf(o.status);
+        return `
+          <article class="card" style="padding:18px;" data-testid="order-card-${o.id}">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-bottom:10px;border-bottom:1px solid var(--border);">
+              <div>
+                <strong style="font-size:15px;" data-testid="order-id-${o.id}">${o.id}</strong>
+                <span style="font-size:12px;color:var(--muted);margin-left:8px;">Placed on ${o.date} · ${o.paymentMethod}</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <strong style="font-size:16px;">${formatINR(o.total)}</strong>
+                <button type="button" class="btn btn-outline btn-sm" data-testid="download-invoice-${o.id}" onclick="downloadInvoice('${o.id}')">↓ Invoice</button>
+                ${(!isCancelled && o.status !== 'Delivered') ? `<button type="button" class="btn btn-danger btn-sm" data-testid="cancel-order-${o.id}" onclick="openCancelOrderModal('${o.id}')">Cancel Order</button>` : ''}
+              </div>
+            </div>
+
+            <div style="margin:10px 0;font-size:13px;">
+              ${o.items.map(it => `<div style="padding:3px 0;">• <strong>${it.title}</strong> (${it.variant}) × ${it.qty} — ${formatINR(it.price * it.qty)}</div>`).join('')}
+              <div style="font-size:12px;color:var(--muted);margin-top:6px;">Delivery Address: ${o.address}</div>
+            </div>
+
+            ${isCancelled
+              ? `<div class="alert-err" data-testid="order-status-${o.id}">✕ Order Cancelled${o.cancelReason ? ' — Reason: ' + o.cancelReason : ''}</div>`
+              : `<div class="tracker" data-testid="order-tracker-${o.id}">
+                  ${TRACK_STAGES.map((st, idx) => `
+                    <div class="track-step ${idx <= stageIdx ? 'done' : ''}">
+                      <div class="track-dot">${idx <= stageIdx ? '✓' : idx + 1}</div>
+                      <div>${st}</div>
+                    </div>
+                  `).join('')}
+                </div>`
+            }
+          </article>
+        `;
+      }).join('');
+    }
+
+    function openCancelOrderModal(orderId) {
+      cancelTargetOrderId = orderId;
+      document.getElementById('cancelOrderIdText').textContent = orderId;
+      openModal('cancelOrderModal');
+    }
+
+    function confirmCancelOrder() {
+      const o = state.orders.find(x => x.id === cancelTargetOrderId);
+      if (o) {
+        o.status = 'Cancelled';
+        o.cancelReason = document.getElementById('cancelReasonSelect').value;
+        saveState();
+        renderOrdersView();
+        showToast(`Order ${o.id} cancelled`, 'info');
+      }
+      closeModal('cancelOrderModal');
+    }
+
+    function downloadInvoice(orderId) {
+      const o = state.orders.find(x => x.id === orderId);
+      if (!o) return;
+      const lines = [
+        '====================================================',
+        '           FLIPMART — TAX INVOICE (DEMO)            ',
+        '====================================================',
+        `Order ID      : ${o.id}`,
+        `Order Date    : ${o.date}`,
+        `Status        : ${o.status}`,
+        `Payment Method: ${o.paymentMethod}`,
+        `Ship To       : ${o.address}`,
+        '----------------------------------------------------',
+        'ITEMS:',
+        ...o.items.map(i => `  - ${i.title} (${i.variant}) x${i.qty}  |  ${formatINR(i.price * i.qty)}`),
+        '----------------------------------------------------',
+        `GRAND TOTAL   : ${formatINR(o.total)}`,
+        '====================================================',
+        'Thank you for practicing QA automation with FlipMart!'
+      ];
+      const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `FlipMart_Invoice_${o.id}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast(`Downloaded FlipMart_Invoice_${o.id}.txt`, 'success');
+    }
+
+    /* -----------------------------------------------------------------------
+     * 14. QA LAB ASYNC SYNC & BOTTOM QA CONTROL BAR
+     * ----------------------------------------------------------------------- */
+    async function runAsyncInventorySync() {
+      const btn = document.getElementById('syncInventoryBtn');
+      const out = document.getElementById('inventorySyncStatus');
+      btn.disabled = true;
+      out.innerHTML = `<span style="color:var(--blue);font-weight:700;">⏳ Syncing live warehouse stock (1.5s)...</span>`;
+      await new Promise(res => setTimeout(res, 1500 + Number(state.qa.latencyMs || 0)));
+      btn.disabled = false;
+
+      if (state.qa.simulateError500) {
+        out.innerHTML = `<div class="alert-err">HTTP 500: Warehouse inventory endpoint failed.</div>`;
+        return;
+      }
+      const inStock = state.products.filter(p => p.stock > 0).length;
+      out.innerHTML = `<div class="alert-ok">✓ Synced! ${inStock}/${state.products.length} SKUs currently in stock across Mumbai &amp; Pune hubs.</div>`;
+    }
+
+    function initQAControlBar() {
+      const lat = document.getElementById('qaLatencySelect');
+      const err = document.getElementById('qaError500Toggle');
+      const txt = document.getElementById('qaError500Text');
+
+      lat.value = String(state.qa.latencyMs || 0);
+      err.checked = Boolean(state.qa.simulateError500);
+      txt.textContent = err.checked ? '500 Error ACTIVE' : 'Simulate 500 Error';
+
+      lat.addEventListener('change', (e) => {
+        state.qa.latencyMs = Number(e.target.value);
+        saveState();
+        showToast(`Simulated latency: ${state.qa.latencyMs}ms`, 'info');
+      });
+
+      err.addEventListener('change', (e) => {
+        state.qa.simulateError500 = e.target.checked;
+        saveState();
+        txt.textContent = state.qa.simulateError500 ? '500 Error ACTIVE' : 'Simulate 500 Error';
+        txt.style.color = state.qa.simulateError500 ? '#f87171' : '#e2e8f0';
+      });
+    }
+
+    function resetAllData() {
+      state = getSeedState();
+      saveState();
+      verifiedCardLast4 = null;
+      document.getElementById('qaLatencySelect').value = '0';
+      document.getElementById('qaError500Toggle').checked = false;
+      document.getElementById('qaError500Text').textContent = 'Simulate 500 Error';
+      document.getElementById('qaError500Text').style.color = '#e2e8f0';
+      clearAllFilters();
+      updateHeaderBadges();
+      refreshAllSuperCoinWidgets();
+      switchView('shop');
+      showToast('All FlipMart sandbox data reset to defaults', 'success');
+    }
+
+    /* -----------------------------------------------------------------------
+     * 15. BOOTSTRAP APP
+     * ----------------------------------------------------------------------- */
+    window.addEventListener('DOMContentLoaded', () => {
+      initQAControlBar();
+      renderCategoryStrip();
+      renderBrandFilters();
+      updateHeaderBadges();
+      renderPLP();
+      refreshAllSuperCoinWidgets();
+    });
+  </script>
+</body>
+</html>
